@@ -3,16 +3,17 @@ import { logout } from "../login/actions";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black">
-      <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-          <Link href="/admin" className="font-semibold text-zinc-900 dark:text-zinc-50">
+    <div className="min-h-screen">
+      <header className="no-print bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 shadow-md">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
+          <Link href="/admin" className="flex items-center gap-2 font-semibold text-white">
+            <span className="text-xl">🏋️</span>
             RutinasApp
           </Link>
           <form action={logout}>
             <button
               type="submit"
-              className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-indigo-100 hover:bg-white/10 hover:text-white"
             >
               Cerrar sesión
             </button>

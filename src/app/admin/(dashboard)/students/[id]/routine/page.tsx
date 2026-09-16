@@ -25,6 +25,7 @@ export default async function RoutineEditPage({
       restSeconds: exercise.restSeconds != null ? String(exercise.restSeconds) : "",
       notes: exercise.notes ?? "",
       videoUrl: exercise.videoUrl ?? "",
+      imageData: exercise.imageData ?? "",
     })),
   }));
 
@@ -35,7 +36,7 @@ export default async function RoutineEditPage({
       <div>
         <Link
           href={`/admin/students/${id}`}
-          className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+          className="text-sm text-violet-600 hover:text-violet-800 dark:text-violet-400 dark:hover:text-violet-300"
         >
           ← Volver a {student.name}
         </Link>

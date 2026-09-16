@@ -40,6 +40,7 @@ export type ExerciseInput = {
   restSeconds?: number | null;
   notes?: string | null;
   videoUrl?: string | null;
+  imageData?: string | null;
 };
 
 export type RoutineDayInput = {
@@ -72,6 +73,7 @@ export function saveRoutine(studentId: string, title: string, days: RoutineDayIn
                 restSeconds: exercise.restSeconds ?? null,
                 notes: exercise.notes || null,
                 videoUrl: exercise.videoUrl || null,
+                imageData: exercise.imageData || null,
                 order: exerciseIndex,
               })),
             },

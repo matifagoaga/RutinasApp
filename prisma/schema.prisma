@@ -65,6 +65,7 @@ model Exercise {
   restSeconds  Int?
   notes        String?
   videoUrl     String?
+  imageData    String?
 
   @@index([dayId])
 }
