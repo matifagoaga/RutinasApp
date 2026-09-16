@@ -1,36 +1,103 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RutinasApp
 
-## Getting Started
+Herramienta para cargar rutinas de gimnasio a tus alumnos, seguir su progreso
+(peso corporal y entrenamientos completados) y compartírselas online mediante
+un link personal por alumno, con opción de exportar a PDF.
 
-First, run the development server:
+## Stack
+
+- Next.js 16 (App Router) + TypeScript + Tailwind CSS
+- Prisma 7 (con driver adapters) — SQLite en desarrollo, PostgreSQL (Neon) en producción
+- Autenticación simple por passcode para `/admin` (pensado para un solo entrenador)
+
+## Desarrollo local
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abrí [http://localhost:3000](http://localhost:3000). La primera vez te va a pedir
+la contraseña de `/admin` (variable `ADMIN_PASSCODE` en `.env.local`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Variables de entorno (ver `.env.example`):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `DATABASE_URL` — en local queda `file:./dev.db` (SQLite, no requiere nada más).
+- `ADMIN_PASSCODE` — la contraseña para entrar a `/admin`. Cambiala cuando quieras.
+- `SESSION_SECRET` — clave para firmar la cookie de sesión. Generar con:
+  ```bash
+  node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+  ```
 
-## Learn More
+### Base de datos
 
-To learn more about Next.js, take a look at the following resources:
+El schema vive en `prisma/schema.prisma`. Después de modificarlo:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run db:migrate
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Para explorar los datos con una UI:
 
-## Deploy on Vercel
+```bash
+npm run db:studio
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Cómo funciona
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **`/admin`** (protegido por passcode): alta de alumnos, carga y edición de
+  rutinas (por días y ejercicios), registro de peso corporal, e historial de
+  entrenamientos completados.
+- **`/r/[token]`** (público, sin login): cada alumno tiene un link único desde
+  el botón "Copiar link del alumno" en su ficha. Ahí ve su rutina activa,
+  puede marcar el día como completado y registrar su peso.
+- **Exportar a PDF**: el botón "Descargar PDF" (en admin y en la vista del
+  alumno) usa la impresión del navegador (`window.print()`) con estilos que
+  ocultan botones y formularios, dejando solo la rutina.
+- Cada vez que guardás una rutina nueva para un alumno, la anterior queda en
+  el historial (no se borra) y la nueva pasa a ser la activa.
+
+## Deploy a producción (Vercel + Neon)
+
+La app está pensada para desarrollarse en local con SQLite y desplegarse con
+PostgreSQL. Pasos:
+
+1. **Crear una base en Neon** ([neon.tech](https://neon.tech), tiene plan
+   gratuito). Copiá la connection string (`postgresql://...`).
+2. **Cambiar el datasource** en `prisma/schema.prisma`:
+   ```prisma
+   datasource db {
+     provider = "postgresql"
+   }
+   ```
+3. **Cambiar el driver adapter** en `src/lib/db.ts`: reemplazar
+   `@prisma/adapter-better-sqlite3` por `@prisma/adapter-pg`:
+   ```bash
+   npm install @prisma/adapter-pg pg
+   npm uninstall @prisma/adapter-better-sqlite3 better-sqlite3
+   ```
+   ```ts
+   import { PrismaPg } from "@prisma/adapter-pg";
+   import { PrismaClient } from "@/generated/prisma/client";
+
+   function createClient() {
+     const url = process.env.DATABASE_URL;
+     if (!url) throw new Error("Falta DATABASE_URL en las variables de entorno");
+     const adapter = new PrismaPg({ connectionString: url });
+     return new PrismaClient({ adapter });
+   }
+   // ... el resto del archivo queda igual
+   ```
+4. **Migrar el schema a la base de Neon**:
+   ```bash
+   DATABASE_URL="postgresql://..." npx prisma migrate deploy
+   ```
+5. **Subir el proyecto a GitHub** y crear un proyecto nuevo en
+   [vercel.com](https://vercel.com) importando ese repo.
+6. **Variables de entorno en Vercel** (Project Settings → Environment
+   Variables): `DATABASE_URL` (la de Neon), `ADMIN_PASSCODE`, `SESSION_SECRET`.
+7. Deploy. Los links `/r/[token]` van a funcionar con el dominio que te da
+   Vercel (o el que configures).
+
+La creación de las cuentas de GitHub/Vercel/Neon y el login en esos sitios
+los hace el entrenador — esto es solo la guía de los pasos técnicos.

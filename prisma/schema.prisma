@@ -1,0 +1,107 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  // Local dev: SQLite. Para producción, cambiar a "postgresql" y usar la
+  // DATABASE_URL de Neon en prisma.config.ts / variables de entorno.
+  provider = "sqlite"
+}
+
+model Student {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  notes     String?
+  token     String   @unique @default(cuid())
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  routines    Routine[]
+  workoutLogs WorkoutLog[]
+  bodyMetrics BodyMetric[]
+}
+
+model Routine {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  title     String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  days RoutineDay[]
+
+  @@index([studentId])
+}
+
+model RoutineDay {
+  id        String  @id @default(cuid())
+  routineId String
+  routine   Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  label     String
+  order     Int     @default(0)
+
+  exercises  Exercise[]
+  workoutLogs WorkoutLog[]
+
+  @@index([routineId])
+}
+
+model Exercise {
+  id           String  @id @default(cuid())
+  dayId        String
+  day          RoutineDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  order        Int     @default(0)
+  name         String
+  sets         Int
+  reps         String
+  weight       String?
+  restSeconds  Int?
+  notes        String?
+  videoUrl     String?
+
+  @@index([dayId])
+}
+
+model WorkoutLog {
+  id           String     @id @default(cuid())
+  studentId    String
+  student      Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  routineDayId String?
+  routineDay   RoutineDay? @relation(fields: [routineDayId], references: [id], onDelete: SetNull)
+  date         DateTime   @default(now())
+  feeling      String?
+
+  entries WorkoutLogEntry[]
+
+  @@index([studentId])
+}
+
+model WorkoutLogEntry {
+  id             String     @id @default(cuid())
+  workoutLogId   String
+  workoutLog     WorkoutLog @relation(fields: [workoutLogId], references: [id], onDelete: Cascade)
+  exerciseName   String
+  setsCompleted  Int?
+  repsActual     String?
+  weightActual   String?
+
+  @@index([workoutLogId])
+}
+
+model BodyMetric {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  date      DateTime @default(now())
+  weightKg  Float?
+  notes     String?
+
+  @@index([studentId])
+}
