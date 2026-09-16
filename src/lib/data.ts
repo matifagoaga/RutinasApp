@@ -43,9 +43,14 @@ export type ExerciseInput = {
   imageData?: string | null;
 };
 
-export type RoutineDayInput = {
+export type BlockInput = {
   label: string;
   exercises: ExerciseInput[];
+};
+
+export type RoutineDayInput = {
+  label: string;
+  blocks: BlockInput[];
 };
 
 export function saveRoutine(studentId: string, title: string, days: RoutineDayInput[]) {
@@ -64,24 +69,38 @@ export function saveRoutine(studentId: string, title: string, days: RoutineDayIn
           create: days.map((day, dayIndex) => ({
             label: day.label,
             order: dayIndex,
-            exercises: {
-              create: day.exercises.map((exercise, exerciseIndex) => ({
-                name: exercise.name,
-                sets: exercise.sets,
-                reps: exercise.reps,
-                weight: exercise.weight || null,
-                restSeconds: exercise.restSeconds ?? null,
-                notes: exercise.notes || null,
-                videoUrl: exercise.videoUrl || null,
-                imageData: exercise.imageData || null,
-                order: exerciseIndex,
+            blocks: {
+              create: day.blocks.map((block, blockIndex) => ({
+                label: block.label,
+                order: blockIndex,
+                exercises: {
+                  create: block.exercises.map((exercise, exerciseIndex) => ({
+                    name: exercise.name,
+                    sets: exercise.sets,
+                    reps: exercise.reps,
+                    weight: exercise.weight || null,
+                    restSeconds: exercise.restSeconds ?? null,
+                    notes: exercise.notes || null,
+                    videoUrl: exercise.videoUrl || null,
+                    imageData: exercise.imageData || null,
+                    order: exerciseIndex,
+                  })),
+                },
               })),
             },
           })),
         },
       },
       include: {
-        days: { orderBy: { order: "asc" }, include: { exercises: { orderBy: { order: "asc" } } } },
+        days: {
+          orderBy: { order: "asc" },
+          include: {
+            blocks: {
+              orderBy: { order: "asc" },
+              include: { exercises: { orderBy: { order: "asc" } } },
+            },
+          },
+        },
       },
     });
   });
@@ -93,7 +112,12 @@ export function getActiveRoutine(studentId: string) {
     include: {
       days: {
         orderBy: { order: "asc" },
-        include: { exercises: { orderBy: { order: "asc" } } },
+        include: {
+          blocks: {
+            orderBy: { order: "asc" },
+            include: { exercises: { orderBy: { order: "asc" } } },
+          },
+        },
       },
     },
   });
@@ -102,7 +126,12 @@ export function getActiveRoutine(studentId: string) {
 export function getRoutineDayById(routineDayId: string) {
   return db.routineDay.findUnique({
     where: { id: routineDayId },
-    include: { exercises: true },
+    include: {
+      blocks: {
+        orderBy: { order: "asc" },
+        include: { exercises: { orderBy: { order: "asc" } } },
+      },
+    },
   });
 }
 

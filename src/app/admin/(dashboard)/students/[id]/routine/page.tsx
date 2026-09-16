@@ -17,15 +17,18 @@ export default async function RoutineEditPage({
 
   const initialDays = (activeRoutine?.days ?? []).map((day) => ({
     label: day.label,
-    exercises: day.exercises.map((exercise) => ({
-      name: exercise.name,
-      sets: String(exercise.sets),
-      reps: exercise.reps,
-      weight: exercise.weight ?? "",
-      restSeconds: exercise.restSeconds != null ? String(exercise.restSeconds) : "",
-      notes: exercise.notes ?? "",
-      videoUrl: exercise.videoUrl ?? "",
-      imageData: exercise.imageData ?? "",
+    blocks: day.blocks.map((block) => ({
+      label: block.label,
+      exercises: block.exercises.map((exercise) => ({
+        name: exercise.name,
+        sets: String(exercise.sets),
+        reps: exercise.reps,
+        weight: exercise.weight ?? "",
+        restSeconds: exercise.restSeconds != null ? String(exercise.restSeconds) : "",
+        notes: exercise.notes ?? "",
+        videoUrl: exercise.videoUrl ?? "",
+        imageData: exercise.imageData ?? "",
+      })),
     })),
   }));
 
@@ -36,7 +39,7 @@ export default async function RoutineEditPage({
       <div>
         <Link
           href={`/admin/students/${id}`}
-          className="text-sm text-violet-600 hover:text-violet-800 dark:text-violet-400 dark:hover:text-violet-300"
+          className="text-sm text-emerald-700 hover:text-emerald-900 dark:text-emerald-400 dark:hover:text-emerald-300"
         >
           ← Volver a {student.name}
         </Link>

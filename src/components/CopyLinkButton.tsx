@@ -19,7 +19,7 @@ export function CopyLinkButton({ url }: { url: string }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="no-print rounded-lg border border-violet-200 bg-white px-3 py-2 text-sm font-medium text-violet-700 shadow-sm hover:border-violet-400 hover:bg-violet-50 dark:border-violet-900 dark:bg-zinc-950 dark:text-violet-300 dark:hover:bg-violet-500/10"
+      className="no-print rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm font-medium text-emerald-800 shadow-sm hover:border-emerald-400 hover:bg-emerald-50 dark:border-emerald-900 dark:bg-zinc-950 dark:text-emerald-300 dark:hover:bg-emerald-500/10"
     >
       {copied ? "¡Copiado!" : "Copiar link del alumno"}
     </button>

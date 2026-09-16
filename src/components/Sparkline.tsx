@@ -19,7 +19,7 @@ export function Sparkline({ points }: { points: number[] }) {
   const gradientId = "sparkline-fill";
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="h-14 w-full max-w-xs text-indigo-600 dark:text-indigo-400">
+    <svg viewBox={`0 0 ${width} ${height}`} className="h-14 w-full max-w-xs text-emerald-700 dark:text-emerald-400">
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="currentColor" stopOpacity="0.35" />

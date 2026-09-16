@@ -25,12 +25,14 @@ export async function completeWorkoutAction(token: string, formData: FormData) {
   if (routineDayId) {
     const day = await getRoutineDayById(routineDayId);
     if (day) {
-      entries = day.exercises.map((exercise) => ({
-        exerciseName: exercise.name,
-        setsCompleted: exercise.sets,
-        repsActual: exercise.reps,
-        weightActual: exercise.weight,
-      }));
+      entries = day.blocks.flatMap((block) =>
+        block.exercises.map((exercise) => ({
+          exerciseName: exercise.name,
+          setsCompleted: exercise.sets,
+          repsActual: exercise.reps,
+          weightActual: exercise.weight,
+        }))
+      );
     }
   }
 

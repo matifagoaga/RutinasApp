@@ -47,16 +47,30 @@ model RoutineDay {
   label     String
   order     Int     @default(0)
 
-  exercises  Exercise[]
+  blocks      ExerciseBlock[]
   workoutLogs WorkoutLog[]
 
   @@index([routineId])
 }
 
+model ExerciseBlock {
+  id     String     @id @default(cuid())
+  dayId  String
+  day    RoutineDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  // Nombre opcional (ej. "Bloque A"). Vacío = un solo ejercicio/bloque simple,
+  // sin necesidad de mostrar el concepto de "bloque" al entrenador.
+  label  String     @default("")
+  order  Int        @default(0)
+
+  exercises Exercise[]
+
+  @@index([dayId])
+}
+
 model Exercise {
   id           String  @id @default(cuid())
-  dayId        String
-  day          RoutineDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  blockId      String
+  block        ExerciseBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
   order        Int     @default(0)
   name         String
   sets         Int
@@ -67,7 +81,7 @@ model Exercise {
   videoUrl     String?
   imageData    String?
 
-  @@index([dayId])
+  @@index([blockId])
 }
 
 model WorkoutLog {

@@ -10,18 +10,12 @@ export type ExerciseRow = {
   imageData?: string | null;
 };
 
-export function ExerciseTable({
-  exercises,
-  headerClass,
-}: {
-  exercises: ExerciseRow[];
-  headerClass: string;
-}) {
+export function ExerciseTable({ exercises }: { exercises: ExerciseRow[] }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
       <table className="w-full min-w-[560px] text-sm">
         <thead>
-          <tr className={`text-left text-xs font-semibold uppercase tracking-wide ${headerClass}`}>
+          <tr className="bg-emerald-50 text-left text-xs font-semibold uppercase tracking-wide text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300">
             <th className="px-3 py-2.5">Ejercicio</th>
             <th className="px-3 py-2.5 text-center">Series</th>
             <th className="px-3 py-2.5 text-center">Reps</th>
@@ -56,7 +50,7 @@ export function ExerciseTable({
                       href={exercise.videoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="no-print inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                      className="no-print inline-flex items-center gap-1 text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400"
                     >
                       ▶ video
                     </a>

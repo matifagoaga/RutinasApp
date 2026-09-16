@@ -8,7 +8,6 @@ import {
 } from "@/lib/data";
 import { getBaseUrl } from "@/lib/url";
 import { formatDate } from "@/lib/format";
-import { getDayPalette } from "@/lib/dayColors";
 import { CopyLinkButton } from "@/components/CopyLinkButton";
 import { PrintButton } from "@/components/PrintButton";
 import { Sparkline } from "@/components/Sparkline";
@@ -41,14 +40,11 @@ export default async function StudentDetailPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-wrap items-start justify-between gap-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-6 text-white shadow-md">
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-emerald-100 pb-5 dark:border-emerald-950">
         <div>
-          <Link href="/admin" className="no-print text-sm text-indigo-100 hover:text-white">
-            ← Alumnos
-          </Link>
-          <h1 className="mt-2 text-2xl font-semibold">{student.name}</h1>
+          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{student.name}</h1>
           {(student.email || student.phone) && (
-            <p className="text-sm text-indigo-100">
+            <p className="text-sm text-zinc-500">
               {[student.email, student.phone].filter(Boolean).join(" · ")}
             </p>
           )}
@@ -58,7 +54,7 @@ export default async function StudentDetailPage({
           <PrintButton />
           <Link
             href={`/admin/students/${id}/routine`}
-            className="no-print rounded-lg bg-white px-3 py-2 text-sm font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50"
+            className="no-print rounded-lg bg-emerald-800 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700"
           >
             {routine ? "Editar rutina" : "Crear rutina"}
           </Link>
@@ -73,20 +69,29 @@ export default async function StudentDetailPage({
           <p className="mt-2 text-sm text-zinc-500">Todavía no tiene una rutina cargada.</p>
         ) : (
           <div className="mt-3 flex flex-col gap-5">
-            <p className="text-sm font-medium text-violet-600 dark:text-violet-400">{routine.title}</p>
-            {routine.days.map((day, index) => {
-              const palette = getDayPalette(index);
+            <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">{routine.title}</p>
+            {routine.days.map((day) => {
+              const showBlockLabel = day.blocks.length > 1;
               return (
                 <div
                   key={day.id}
-                  className={`overflow-hidden rounded-2xl border bg-white shadow-sm dark:bg-zinc-950 ${palette.border}`}
+                  className="overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-sm dark:border-emerald-950 dark:bg-zinc-950"
                 >
-                  <div className={`flex items-center gap-2 px-4 py-3 ${palette.header}`}>
-                    <span className={`h-2.5 w-2.5 rounded-full ${palette.badge}`} />
+                  <div className="flex items-center gap-2 bg-emerald-900 px-4 py-3 text-white">
+                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
                     <h3 className="font-semibold">{day.label}</h3>
                   </div>
-                  <div className="p-4">
-                    <ExerciseTable exercises={day.exercises} headerClass={palette.header} />
+                  <div className="flex flex-col gap-4 p-4">
+                    {day.blocks.map((block) => (
+                      <div key={block.id}>
+                        {showBlockLabel && (
+                          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                            {block.label}
+                          </p>
+                        )}
+                        <ExerciseTable exercises={block.exercises} />
+                      </div>
+                    ))}
                   </div>
                 </div>
               );
@@ -127,7 +132,7 @@ export default async function StudentDetailPage({
                 type="number"
                 step="0.1"
                 name="weightKg"
-                className="w-24 rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-900"
+                className="w-24 rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
               />
             </div>
             <div className="min-w-[140px] flex-1">
@@ -135,19 +140,19 @@ export default async function StudentDetailPage({
               <input
                 type="text"
                 name="notes"
-                className="w-full rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-900"
+                className="w-full rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
               />
             </div>
             <button
               type="submit"
-              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-500"
+              className="rounded-lg bg-emerald-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
             >
               Registrar
             </button>
           </form>
         </div>
 
-        <div className="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm dark:border-sky-950 dark:bg-zinc-950">
+        <div className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm dark:border-emerald-950 dark:bg-zinc-950">
           <h2 className="flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
             <span>📅</span> Entrenamientos recientes
           </h2>
@@ -158,7 +163,7 @@ export default async function StudentDetailPage({
               {workoutLogs.map((log) => (
                 <li
                   key={log.id}
-                  className="rounded-lg border border-sky-100 bg-sky-50/50 p-3 dark:border-sky-950 dark:bg-sky-500/5"
+                  className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/40"
                 >
                   <div className="flex justify-between font-medium text-zinc-900 dark:text-zinc-50">
                     <span>{log.routineDay?.label ?? "Sesión libre"}</span>

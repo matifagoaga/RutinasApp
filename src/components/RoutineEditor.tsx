@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { getDayPalette } from "@/lib/dayColors";
 
 type ExerciseState = {
   name: string;
@@ -14,9 +13,14 @@ type ExerciseState = {
   imageData: string;
 };
 
-type DayState = {
+type BlockState = {
   label: string;
   exercises: ExerciseState[];
+};
+
+type DayState = {
+  label: string;
+  blocks: BlockState[];
 };
 
 export type SavedExercise = {
@@ -30,15 +34,24 @@ export type SavedExercise = {
   imageData?: string | null;
 };
 
-export type SavedDay = {
+export type SavedBlock = {
   label: string;
   exercises: SavedExercise[];
+};
+
+export type SavedDay = {
+  label: string;
+  blocks: SavedBlock[];
 };
 
 const MAX_GIF_BYTES = 3 * 1024 * 1024; // 3MB
 const MAX_SOURCE_BYTES = 15 * 1024 * 1024; // 15MB tope antes de procesar
 const MAX_DIMENSION = 900;
 const JPEG_QUALITY = 0.82;
+
+function blockLabelForIndex(index: number) {
+  return `Bloque ${String.fromCharCode(65 + index)}`;
+}
 
 function emptyExercise(): ExerciseState {
   return {
@@ -53,8 +66,12 @@ function emptyExercise(): ExerciseState {
   };
 }
 
+function emptyBlock(index: number): BlockState {
+  return { label: blockLabelForIndex(index), exercises: [emptyExercise()] };
+}
+
 function emptyDay(n: number): DayState {
-  return { label: `Día ${n}`, exercises: [emptyExercise()] };
+  return { label: `Día ${n}`, blocks: [emptyBlock(0)] };
 }
 
 function readFileAsDataUrl(file: File): Promise<string> {
@@ -125,25 +142,52 @@ export function RoutineEditor({
     setDays((prev) => prev.map((day, i) => (i === dayIndex ? { ...day, label } : day)));
   }
 
-  function updateExercise(dayIndex: number, exIndex: number, patch: Partial<ExerciseState>) {
+  function updateBlock(dayIndex: number, blockIndex: number, patch: Partial<BlockState>) {
+    setDays((prev) =>
+      prev.map((day, i) =>
+        i !== dayIndex
+          ? day
+          : { ...day, blocks: day.blocks.map((b, j) => (j === blockIndex ? { ...b, ...patch } : b)) }
+      )
+    );
+  }
+
+  function updateExercise(
+    dayIndex: number,
+    blockIndex: number,
+    exIndex: number,
+    patch: Partial<ExerciseState>
+  ) {
     setDays((prev) =>
       prev.map((day, i) =>
         i !== dayIndex
           ? day
           : {
               ...day,
-              exercises: day.exercises.map((ex, j) => (j === exIndex ? { ...ex, ...patch } : ex)),
+              blocks: day.blocks.map((block, j) =>
+                j !== blockIndex
+                  ? block
+                  : {
+                      ...block,
+                      exercises: block.exercises.map((ex, k) => (k === exIndex ? { ...ex, ...patch } : ex)),
+                    }
+              ),
             }
       )
     );
   }
 
-  async function handleImageChange(dayIndex: number, exIndex: number, file: File | null) {
+  async function handleImageChange(
+    dayIndex: number,
+    blockIndex: number,
+    exIndex: number,
+    file: File | null
+  ) {
     if (!file) return;
     setError(null);
     try {
       const processed = await processImageFile(file);
-      updateExercise(dayIndex, exIndex, { imageData: processed });
+      updateExercise(dayIndex, blockIndex, exIndex, { imageData: processed });
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo procesar la imagen.");
     }
@@ -157,16 +201,48 @@ export function RoutineEditor({
     setDays((prev) => prev.filter((_, i) => i !== dayIndex));
   }
 
-  function addExercise(dayIndex: number) {
+  function addBlock(dayIndex: number) {
     setDays((prev) =>
-      prev.map((day, i) => (i === dayIndex ? { ...day, exercises: [...day.exercises, emptyExercise()] } : day))
+      prev.map((day, i) => (i === dayIndex ? { ...day, blocks: [...day.blocks, emptyBlock(day.blocks.length)] } : day))
     );
   }
 
-  function removeExercise(dayIndex: number, exIndex: number) {
+  function removeBlock(dayIndex: number, blockIndex: number) {
     setDays((prev) =>
       prev.map((day, i) =>
-        i === dayIndex ? { ...day, exercises: day.exercises.filter((_, j) => j !== exIndex) } : day
+        i === dayIndex ? { ...day, blocks: day.blocks.filter((_, j) => j !== blockIndex) } : day
+      )
+    );
+  }
+
+  function addExercise(dayIndex: number, blockIndex: number) {
+    setDays((prev) =>
+      prev.map((day, i) =>
+        i !== dayIndex
+          ? day
+          : {
+              ...day,
+              blocks: day.blocks.map((block, j) =>
+                j === blockIndex ? { ...block, exercises: [...block.exercises, emptyExercise()] } : block
+              ),
+            }
+      )
+    );
+  }
+
+  function removeExercise(dayIndex: number, blockIndex: number, exIndex: number) {
+    setDays((prev) =>
+      prev.map((day, i) =>
+        i !== dayIndex
+          ? day
+          : {
+              ...day,
+              blocks: day.blocks.map((block, j) =>
+                j === blockIndex
+                  ? { ...block, exercises: block.exercises.filter((_, k) => k !== exIndex) }
+                  : block
+              ),
+            }
       )
     );
   }
@@ -183,20 +259,25 @@ export function RoutineEditor({
     const parsedDays: SavedDay[] = days
       .map((day) => ({
         label: day.label.trim() || "Día",
-        exercises: day.exercises
-          .filter((ex) => ex.name.trim())
-          .map((ex) => ({
-            name: ex.name.trim(),
-            sets: Math.max(1, Number(ex.sets) || 1),
-            reps: ex.reps.trim() || "-",
-            weight: ex.weight.trim() || null,
-            restSeconds: ex.restSeconds.trim() ? Number(ex.restSeconds) : null,
-            notes: ex.notes.trim() || null,
-            videoUrl: ex.videoUrl.trim() || null,
-            imageData: ex.imageData || null,
-          })),
+        blocks: day.blocks
+          .map((block) => ({
+            label: block.label.trim(),
+            exercises: block.exercises
+              .filter((ex) => ex.name.trim())
+              .map((ex) => ({
+                name: ex.name.trim(),
+                sets: Math.max(1, Number(ex.sets) || 1),
+                reps: ex.reps.trim() || "-",
+                weight: ex.weight.trim() || null,
+                restSeconds: ex.restSeconds.trim() ? Number(ex.restSeconds) : null,
+                notes: ex.notes.trim() || null,
+                videoUrl: ex.videoUrl.trim() || null,
+                imageData: ex.imageData || null,
+              })),
+          }))
+          .filter((block) => block.exercises.length > 0),
       }))
-      .filter((day) => day.exercises.length > 0);
+      .filter((day) => day.blocks.length > 0);
 
     if (parsedDays.length === 0) {
       setError("Agregá al menos un ejercicio con nombre.");
@@ -223,26 +304,26 @@ export function RoutineEditor({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Ej: Fuerza - Fase 1"
-          className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-indigo-900"
+          className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
         />
       </div>
 
       <div className="flex flex-col gap-5">
         {days.map((day, dayIndex) => {
-          const palette = getDayPalette(dayIndex);
+          const showBlockChrome = day.blocks.length > 1;
           return (
             <div
               key={dayIndex}
-              className={`overflow-hidden rounded-2xl border bg-white shadow-sm dark:bg-zinc-950 ${palette.border}`}
+              className="overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-sm dark:border-emerald-950 dark:bg-zinc-950"
             >
-              <div className={`flex items-center justify-between gap-3 px-4 py-3 ${palette.header}`}>
+              <div className="flex items-center justify-between gap-3 bg-emerald-50 px-4 py-3 dark:bg-emerald-500/10">
                 <div className="flex items-center gap-2">
-                  <span className={`h-2.5 w-2.5 rounded-full ${palette.badge}`} />
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-700" />
                   <input
                     type="text"
                     value={day.label}
                     onChange={(e) => updateDayLabel(dayIndex, e.target.value)}
-                    className="rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-semibold outline-none focus:border-current"
+                    className="rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-semibold text-emerald-900 outline-none focus:border-emerald-400 dark:text-emerald-200"
                   />
                 </div>
                 {days.length > 1 && (
@@ -257,117 +338,173 @@ export function RoutineEditor({
               </div>
 
               <div className="flex flex-col gap-3 p-4">
-                {day.exercises.map((ex, exIndex) => (
+                {day.blocks.map((block, blockIndex) => (
                   <div
-                    key={exIndex}
-                    className="rounded-xl border border-zinc-200 p-3 dark:border-zinc-800"
+                    key={blockIndex}
+                    className={
+                      showBlockChrome
+                        ? "rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/40"
+                        : ""
+                    }
                   >
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={ex.name}
-                        onChange={(e) => updateExercise(dayIndex, exIndex, { name: e.target.value })}
-                        placeholder="Ejercicio (ej: Sentadilla)"
-                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-indigo-900"
-                      />
+                    {showBlockChrome && (
+                      <div className="mb-3 flex items-center justify-between gap-2">
+                        <input
+                          type="text"
+                          value={block.label}
+                          onChange={(e) => updateBlock(dayIndex, blockIndex, { label: e.target.value })}
+                          placeholder="Nombre del bloque"
+                          className="rounded-lg border border-emerald-200 bg-white px-2 py-1 text-xs font-semibold text-emerald-800 outline-none focus:border-emerald-500 dark:border-emerald-900 dark:bg-zinc-950 dark:text-emerald-300"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeBlock(dayIndex, blockIndex)}
+                          className="shrink-0 text-xs font-medium text-red-600 hover:text-red-700"
+                        >
+                          Quitar bloque
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col gap-3">
+                      {block.exercises.map((ex, exIndex) => (
+                        <div
+                          key={exIndex}
+                          className="rounded-xl border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-950"
+                        >
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={ex.name}
+                              onChange={(e) =>
+                                updateExercise(dayIndex, blockIndex, exIndex, { name: e.target.value })
+                              }
+                              placeholder="Ejercicio (ej: Sentadilla)"
+                              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeExercise(dayIndex, blockIndex, exIndex)}
+                              className="shrink-0 text-sm text-zinc-400 hover:text-red-600"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                            <input
+                              type="number"
+                              min={1}
+                              value={ex.sets}
+                              onChange={(e) =>
+                                updateExercise(dayIndex, blockIndex, exIndex, { sets: e.target.value })
+                              }
+                              placeholder="Series"
+                              className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+                            />
+                            <input
+                              type="text"
+                              value={ex.reps}
+                              onChange={(e) =>
+                                updateExercise(dayIndex, blockIndex, exIndex, { reps: e.target.value })
+                              }
+                              placeholder="Reps (ej 8-12)"
+                              className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+                            />
+                            <input
+                              type="text"
+                              value={ex.weight}
+                              onChange={(e) =>
+                                updateExercise(dayIndex, blockIndex, exIndex, { weight: e.target.value })
+                              }
+                              placeholder="Peso sugerido"
+                              className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+                            />
+                            <input
+                              type="number"
+                              min={0}
+                              value={ex.restSeconds}
+                              onChange={(e) =>
+                                updateExercise(dayIndex, blockIndex, exIndex, { restSeconds: e.target.value })
+                              }
+                              placeholder="Descanso (seg)"
+                              className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+                            />
+                          </div>
+                          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            <input
+                              type="text"
+                              value={ex.notes}
+                              onChange={(e) =>
+                                updateExercise(dayIndex, blockIndex, exIndex, { notes: e.target.value })
+                              }
+                              placeholder="Notas (opcional)"
+                              className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+                            />
+                            <input
+                              type="text"
+                              value={ex.videoUrl}
+                              onChange={(e) =>
+                                updateExercise(dayIndex, blockIndex, exIndex, { videoUrl: e.target.value })
+                              }
+                              placeholder="Link de video (opcional)"
+                              className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+                            />
+                          </div>
+
+                          <div className="mt-3 flex items-center gap-3">
+                            {ex.imageData ? (
+                              <>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={ex.imageData}
+                                  alt=""
+                                  className="h-14 w-14 rounded-lg border border-zinc-200 object-cover dark:border-zinc-800"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    updateExercise(dayIndex, blockIndex, exIndex, { imageData: "" })
+                                  }
+                                  className="text-xs font-medium text-red-600 hover:text-red-700"
+                                >
+                                  Quitar foto/GIF
+                                </button>
+                              </>
+                            ) : (
+                              <label className="cursor-pointer text-xs font-medium text-emerald-700 hover:text-emerald-900 dark:text-emerald-400">
+                                + Foto o GIF del ejercicio
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    handleImageChange(dayIndex, blockIndex, exIndex, e.target.files?.[0] ?? null);
+                                    e.target.value = "";
+                                  }}
+                                />
+                              </label>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+
                       <button
                         type="button"
-                        onClick={() => removeExercise(dayIndex, exIndex)}
-                        className="shrink-0 text-sm text-zinc-400 hover:text-red-600"
+                        onClick={() => addExercise(dayIndex, blockIndex)}
+                        className="self-start text-sm font-medium text-emerald-700 hover:text-emerald-900 dark:text-emerald-400"
                       >
-                        ✕
+                        + Agregar ejercicio{showBlockChrome ? ` a ${block.label || "este bloque"}` : ""}
                       </button>
-                    </div>
-                    <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      <input
-                        type="number"
-                        min={1}
-                        value={ex.sets}
-                        onChange={(e) => updateExercise(dayIndex, exIndex, { sets: e.target.value })}
-                        placeholder="Series"
-                        className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-indigo-900"
-                      />
-                      <input
-                        type="text"
-                        value={ex.reps}
-                        onChange={(e) => updateExercise(dayIndex, exIndex, { reps: e.target.value })}
-                        placeholder="Reps (ej 8-12)"
-                        className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-indigo-900"
-                      />
-                      <input
-                        type="text"
-                        value={ex.weight}
-                        onChange={(e) => updateExercise(dayIndex, exIndex, { weight: e.target.value })}
-                        placeholder="Peso sugerido"
-                        className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-indigo-900"
-                      />
-                      <input
-                        type="number"
-                        min={0}
-                        value={ex.restSeconds}
-                        onChange={(e) => updateExercise(dayIndex, exIndex, { restSeconds: e.target.value })}
-                        placeholder="Descanso (seg)"
-                        className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-indigo-900"
-                      />
-                    </div>
-                    <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                      <input
-                        type="text"
-                        value={ex.notes}
-                        onChange={(e) => updateExercise(dayIndex, exIndex, { notes: e.target.value })}
-                        placeholder="Notas (opcional)"
-                        className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-indigo-900"
-                      />
-                      <input
-                        type="text"
-                        value={ex.videoUrl}
-                        onChange={(e) => updateExercise(dayIndex, exIndex, { videoUrl: e.target.value })}
-                        placeholder="Link de video (opcional)"
-                        className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-indigo-900"
-                      />
-                    </div>
-
-                    <div className="mt-3 flex items-center gap-3">
-                      {ex.imageData ? (
-                        <>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={ex.imageData}
-                            alt=""
-                            className="h-14 w-14 rounded-lg border border-zinc-200 object-cover dark:border-zinc-800"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => updateExercise(dayIndex, exIndex, { imageData: "" })}
-                            className="text-xs font-medium text-red-600 hover:text-red-700"
-                          >
-                            Quitar foto/GIF
-                          </button>
-                        </>
-                      ) : (
-                        <label className="cursor-pointer text-xs font-medium text-indigo-600 hover:text-indigo-800 dark:text-indigo-400">
-                          + Foto o GIF del ejercicio
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => {
-                              handleImageChange(dayIndex, exIndex, e.target.files?.[0] ?? null);
-                              e.target.value = "";
-                            }}
-                          />
-                        </label>
-                      )}
                     </div>
                   </div>
                 ))}
 
                 <button
                   type="button"
-                  onClick={() => addExercise(dayIndex)}
-                  className="self-start text-sm font-medium text-indigo-600 hover:text-indigo-800 dark:text-indigo-400"
+                  onClick={() => addBlock(dayIndex)}
+                  className="self-start text-xs font-medium text-emerald-700 hover:text-emerald-900 dark:text-emerald-400"
                 >
-                  + Agregar ejercicio
+                  + Agregar bloque (ejercicios en circuito/superserie)
                 </button>
               </div>
             </div>
@@ -377,7 +514,7 @@ export function RoutineEditor({
         <button
           type="button"
           onClick={addDay}
-          className="self-start rounded-lg border border-dashed border-violet-300 px-4 py-2 text-sm font-medium text-violet-700 hover:border-violet-500 hover:bg-violet-50 dark:border-violet-800 dark:text-violet-300 dark:hover:bg-violet-500/10"
+          className="self-start rounded-lg border border-dashed border-emerald-300 px-4 py-2 text-sm font-medium text-emerald-800 hover:border-emerald-500 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-500/10"
         >
           + Agregar día
         </button>
@@ -388,7 +525,7 @@ export function RoutineEditor({
       <button
         type="submit"
         disabled={isPending}
-        className="self-start rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:from-indigo-500 hover:to-violet-500 disabled:opacity-60"
+        className="self-start rounded-lg bg-emerald-800 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60"
       >
         {isPending ? "Guardando..." : "Guardar rutina"}
       </button>

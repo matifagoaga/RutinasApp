@@ -30,9 +30,18 @@ CREATE TABLE "RoutineDay" (
 );
 
 -- CreateTable
-CREATE TABLE "Exercise" (
+CREATE TABLE "ExerciseBlock" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "dayId" TEXT NOT NULL,
+    "label" TEXT NOT NULL DEFAULT '',
+    "order" INTEGER NOT NULL DEFAULT 0,
+    CONSTRAINT "ExerciseBlock_dayId_fkey" FOREIGN KEY ("dayId") REFERENCES "RoutineDay" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "Exercise" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "blockId" TEXT NOT NULL,
     "order" INTEGER NOT NULL DEFAULT 0,
     "name" TEXT NOT NULL,
     "sets" INTEGER NOT NULL,
@@ -41,7 +50,8 @@ CREATE TABLE "Exercise" (
     "restSeconds" INTEGER,
     "notes" TEXT,
     "videoUrl" TEXT,
-    CONSTRAINT "Exercise_dayId_fkey" FOREIGN KEY ("dayId") REFERENCES "RoutineDay" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "imageData" TEXT,
+    CONSTRAINT "Exercise_blockId_fkey" FOREIGN KEY ("blockId") REFERENCES "ExerciseBlock" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -86,7 +96,10 @@ CREATE INDEX "Routine_studentId_idx" ON "Routine"("studentId");
 CREATE INDEX "RoutineDay_routineId_idx" ON "RoutineDay"("routineId");
 
 -- CreateIndex
-CREATE INDEX "Exercise_dayId_idx" ON "Exercise"("dayId");
+CREATE INDEX "ExerciseBlock_dayId_idx" ON "ExerciseBlock"("dayId");
+
+-- CreateIndex
+CREATE INDEX "Exercise_blockId_idx" ON "Exercise"("blockId");
 
 -- CreateIndex
 CREATE INDEX "WorkoutLog_studentId_idx" ON "WorkoutLog"("studentId");
