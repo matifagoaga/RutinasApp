@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireAdminSession } from "@/lib/auth";
-import { logBodyMetric } from "@/lib/data";
+import { deleteStudent, logBodyMetric } from "@/lib/data";
 
 export async function logBodyMetricAction(studentId: string, formData: FormData) {
   await requireAdminSession();
@@ -17,4 +18,11 @@ export async function logBodyMetricAction(studentId: string, formData: FormData)
 
   await logBodyMetric(studentId, { weightKg, notes: notes || null });
   revalidatePath(`/admin/students/${studentId}`);
+}
+
+export async function deleteStudentAction(studentId: string) {
+  await requireAdminSession();
+  await deleteStudent(studentId);
+  revalidatePath("/admin");
+  redirect("/admin");
 }

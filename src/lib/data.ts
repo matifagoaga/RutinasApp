@@ -14,6 +14,10 @@ export function getStudentByToken(token: string) {
   return db.student.findUnique({ where: { token } });
 }
 
+export function deleteStudent(id: string) {
+  return db.student.delete({ where: { id } });
+}
+
 export function createStudent(input: {
   name: string;
   email?: string | null;

@@ -12,7 +12,8 @@ import { CopyLinkButton } from "@/components/CopyLinkButton";
 import { PrintButton } from "@/components/PrintButton";
 import { Sparkline } from "@/components/Sparkline";
 import { ExerciseTable } from "@/components/ExerciseTable";
-import { logBodyMetricAction } from "./actions";
+import { DeleteStudentButton } from "@/components/DeleteStudentButton";
+import { deleteStudentAction, logBodyMetricAction } from "./actions";
 
 export default async function StudentDetailPage({
   params,
@@ -37,6 +38,7 @@ export default async function StudentDetailPage({
     .filter((w): w is number => w != null);
 
   const boundLogMetric = logBodyMetricAction.bind(null, id);
+  const boundDelete = deleteStudentAction.bind(null, id);
 
   return (
     <div className="flex flex-col gap-8">
@@ -58,6 +60,7 @@ export default async function StudentDetailPage({
           >
             {routine ? "Editar rutina" : "Crear rutina"}
           </Link>
+          <DeleteStudentButton studentName={student.name} onDelete={boundDelete} />
         </div>
       </div>
 
