@@ -23,6 +23,7 @@ model Student {
   routines    Routine[]
   workoutLogs WorkoutLog[]
   bodyMetrics BodyMetric[]
+  payments    Payment[]
 }
 
 model Routine {
@@ -115,6 +116,19 @@ model BodyMetric {
   date      DateTime @default(now())
   weightKg  Float?
   notes     String?
+
+  @@index([studentId])
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  // Período que cubre el pago, formato "YYYY-MM" (ej. "2026-09").
+  month     String
+  amount    Float?
+  notes     String?
+  paidAt    DateTime @default(now())
 
   @@index([studentId])
 }

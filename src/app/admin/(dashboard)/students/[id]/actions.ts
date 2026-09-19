@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdminSession } from "@/lib/auth";
-import { deleteStudent, logBodyMetric } from "@/lib/data";
+import { deleteStudent, logBodyMetric, registerPayment } from "@/lib/data";
 
 export async function logBodyMetricAction(studentId: string, formData: FormData) {
   await requireAdminSession();
@@ -17,6 +17,26 @@ export async function logBodyMetricAction(studentId: string, formData: FormData)
   }
 
   await logBodyMetric(studentId, { weightKg, notes: notes || null });
+  revalidatePath(`/admin/students/${studentId}`);
+}
+
+export async function registerPaymentAction(studentId: string, formData: FormData) {
+  await requireAdminSession();
+
+  const month = String(formData.get("month") ?? "").trim();
+  if (!/^\d{4}-\d{2}$/.test(month)) {
+    throw new Error("Elegí un mes válido");
+  }
+
+  const amountRaw = String(formData.get("amount") ?? "").trim();
+  const notes = String(formData.get("notes") ?? "").trim();
+  const amount = amountRaw ? Number(amountRaw) : null;
+
+  if (amountRaw && Number.isNaN(amount)) {
+    throw new Error("Monto inválido");
+  }
+
+  await registerPayment(studentId, { month, amount, notes: notes || null });
   revalidatePath(`/admin/students/${studentId}`);
 }
 

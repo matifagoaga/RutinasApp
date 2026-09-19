@@ -76,8 +76,16 @@ export default async function PublicRoutinePage({
                       <ExerciseTable exercises={block.exercises} />
                     </div>
                   ))}
-                  <form action={boundComplete} className="no-print">
+                  <form action={boundComplete} className="no-print flex flex-col gap-2">
                     <input type="hidden" name="routineDayId" value={day.id} />
+                    {!done && (
+                      <textarea
+                        name="feeling"
+                        rows={2}
+                        placeholder="¿Cómo te sentiste? (opcional)"
+                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+                      />
+                    )}
                     <button
                       type="submit"
                       className={`w-full rounded-lg px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition ${
@@ -147,6 +155,7 @@ export default async function PublicRoutinePage({
                   <span>{log.routineDay?.label ?? "Sesión libre"}</span>
                   <span>{formatDate(log.date)}</span>
                 </div>
+                {log.feeling && <p className="mt-1 text-xs text-zinc-500">{log.feeling}</p>}
               </li>
             ))}
           </ul>

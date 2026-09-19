@@ -263,3 +263,31 @@ export async function getStudentsNeedingAttention() {
     })
     .filter((student): student is { id: string; name: string; reason: string } => student.reason != null);
 }
+
+// ---------- Pagos ----------
+
+export function getPayments(studentId: string, limit = 12) {
+  return db.payment.findMany({
+    where: { studentId },
+    orderBy: { paidAt: "desc" },
+    take: limit,
+  });
+}
+
+export function hasPaidForMonth(studentId: string, month: string) {
+  return db.payment.findFirst({ where: { studentId, month } });
+}
+
+export function registerPayment(
+  studentId: string,
+  input: { month: string; amount?: number | null; notes?: string | null }
+) {
+  return db.payment.create({
+    data: {
+      studentId,
+      month: input.month,
+      amount: input.amount ?? null,
+      notes: input.notes || null,
+    },
+  });
+}

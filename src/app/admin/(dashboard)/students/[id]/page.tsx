@@ -3,17 +3,18 @@ import Link from "next/link";
 import {
   getActiveRoutine,
   getBodyMetrics,
+  getPayments,
   getRecentWorkoutLogs,
   getStudentById,
 } from "@/lib/data";
 import { getBaseUrl } from "@/lib/url";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatMonthLabel, getCurrentMonthKey } from "@/lib/format";
 import { CopyLinkButton } from "@/components/CopyLinkButton";
 import { PrintButton } from "@/components/PrintButton";
 import { Sparkline } from "@/components/Sparkline";
 import { ExerciseTable } from "@/components/ExerciseTable";
 import { DeleteStudentButton } from "@/components/DeleteStudentButton";
-import { deleteStudentAction, logBodyMetricAction } from "./actions";
+import { deleteStudentAction, logBodyMetricAction, registerPaymentAction } from "./actions";
 
 export default async function StudentDetailPage({
   params,
@@ -24,10 +25,11 @@ export default async function StudentDetailPage({
   const student = await getStudentById(id);
   if (!student) notFound();
 
-  const [routine, workoutLogs, bodyMetrics, baseUrl] = await Promise.all([
+  const [routine, workoutLogs, bodyMetrics, payments, baseUrl] = await Promise.all([
     getActiveRoutine(id),
     getRecentWorkoutLogs(id, 10),
     getBodyMetrics(id, 30),
+    getPayments(id, 12),
     getBaseUrl(),
   ]);
 
@@ -37,7 +39,11 @@ export default async function StudentDetailPage({
     .map((m) => m.weightKg)
     .filter((w): w is number => w != null);
 
+  const currentMonth = getCurrentMonthKey();
+  const paidCurrentMonth = payments.some((p) => p.month === currentMonth);
+
   const boundLogMetric = logBodyMetricAction.bind(null, id);
+  const boundRegisterPayment = registerPaymentAction.bind(null, id);
   const boundDelete = deleteStudentAction.bind(null, id);
 
   return (
@@ -103,7 +109,66 @@ export default async function StudentDetailPage({
         )}
       </section>
 
-      <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm dark:border-emerald-950 dark:bg-zinc-950">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              <span>💳</span> Pagos
+            </h2>
+            <span
+              className={`no-print rounded-full px-2.5 py-1 text-xs font-semibold ${
+                paidCurrentMonth
+                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300"
+                  : "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
+              }`}
+            >
+              {paidCurrentMonth ? "Al día" : "Pendiente"} · {formatMonthLabel(currentMonth)}
+            </span>
+          </div>
+          {payments.length === 0 ? (
+            <p className="mt-2 text-sm text-zinc-500">Todavía no hay pagos registrados.</p>
+          ) : (
+            <ul className="mt-3 flex flex-col gap-1 text-sm text-zinc-600 dark:text-zinc-300">
+              {payments.slice(0, 6).map((p) => (
+                <li key={p.id} className="flex justify-between gap-2">
+                  <span>{formatMonthLabel(p.month)}</span>
+                  <span className="text-right">
+                    {p.amount != null ? `$${p.amount}` : ""}
+                    {p.notes ? ` · ${p.notes}` : ""}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <form action={boundRegisterPayment} className="no-print mt-4 flex flex-wrap items-end gap-2">
+            <div>
+              <label className="block text-xs text-zinc-500">Mes</label>
+              <input
+                type="month"
+                name="month"
+                defaultValue={currentMonth}
+                className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-zinc-500">Monto</label>
+              <input
+                type="number"
+                step="0.01"
+                name="amount"
+                placeholder="Opcional"
+                className="w-24 rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+              />
+            </div>
+            <button
+              type="submit"
+              className="rounded-lg bg-emerald-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
+            >
+              Registrar pago
+            </button>
+          </form>
+        </div>
+
         <div className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm dark:border-emerald-950 dark:bg-zinc-950">
           <h2 className="flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
             <span>⚖️</span> Peso corporal

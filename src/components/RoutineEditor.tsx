@@ -53,6 +53,8 @@ function blockLabelForIndex(index: number) {
   return `Bloque ${String.fromCharCode(65 + index)}`;
 }
 
+const WEEKDAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+
 function emptyExercise(): ExerciseState {
   return {
     name: "",
@@ -71,7 +73,7 @@ function emptyBlock(index: number): BlockState {
 }
 
 function emptyDay(n: number): DayState {
-  return { label: `Día ${n}`, blocks: [emptyBlock(0)] };
+  return { label: WEEKDAYS[(n - 1) % WEEKDAYS.length], blocks: [emptyBlock(0)] };
 }
 
 function readFileAsDataUrl(file: File): Promise<string> {
