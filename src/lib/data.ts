@@ -206,3 +206,60 @@ export function getBodyMetrics(studentId: string, limit = 30) {
     take: limit,
   });
 }
+
+// ---------- Panel de inicio ----------
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const ATTENTION_THRESHOLD_DAYS = 7;
+
+export async function getDashboardStats() {
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfWeek = new Date(startOfToday.getTime() - startOfToday.getDay() * DAY_MS);
+
+  const [totalStudents, workoutsToday, workoutsThisWeek] = await Promise.all([
+    db.student.count({ where: { active: true } }),
+    db.workoutLog.count({ where: { date: { gte: startOfToday } } }),
+    db.workoutLog.count({ where: { date: { gte: startOfWeek } } }),
+  ]);
+
+  return { totalStudents, workoutsToday, workoutsThisWeek };
+}
+
+export function getRecentActivity(limit = 10) {
+  return db.workoutLog.findMany({
+    orderBy: { date: "desc" },
+    take: limit,
+    include: { student: true, routineDay: true },
+  });
+}
+
+export async function getStudentsNeedingAttention() {
+  const students = await db.student.findMany({
+    where: { active: true },
+    include: {
+      routines: { where: { isActive: true }, take: 1, select: { id: true } },
+      workoutLogs: { orderBy: { date: "desc" }, take: 1, select: { date: true } },
+    },
+  });
+
+  const now = Date.now();
+
+  return students
+    .map((student) => {
+      const hasRoutine = student.routines.length > 0;
+      const lastWorkoutDate = student.workoutLogs[0]?.date ?? null;
+      const daysSinceLastWorkout = lastWorkoutDate
+        ? Math.floor((now - lastWorkoutDate.getTime()) / DAY_MS)
+        : null;
+
+      let reason: string | null = null;
+      if (!hasRoutine) reason = "Todavía no tiene una rutina cargada";
+      else if (daysSinceLastWorkout === null) reason = "Nunca marcó un entrenamiento";
+      else if (daysSinceLastWorkout >= ATTENTION_THRESHOLD_DAYS)
+        reason = `Hace ${daysSinceLastWorkout} días que no entrena`;
+
+      return { id: student.id, name: student.name, reason };
+    })
+    .filter((student): student is { id: string; name: string; reason: string } => student.reason != null);
+}
