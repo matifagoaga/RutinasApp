@@ -7,9 +7,7 @@ generator client {
 }
 
 datasource db {
-  // Local dev: SQLite. Para producción, cambiar a "postgresql" y usar la
-  // DATABASE_URL de Neon en prisma.config.ts / variables de entorno.
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model Student {

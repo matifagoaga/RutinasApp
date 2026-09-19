@@ -7,7 +7,7 @@ un link personal por alumno, con opción de exportar a PDF.
 ## Stack
 
 - Next.js 16 (App Router) + TypeScript + Tailwind CSS
-- Prisma 7 (con driver adapters) — SQLite en desarrollo, PostgreSQL (Neon) en producción
+- Prisma 7 (con driver adapters) + PostgreSQL en Neon
 - Autenticación simple por passcode para `/admin` (pensado para un solo entrenador)
 
 ## Desarrollo local
@@ -22,7 +22,8 @@ la contraseña de `/admin` (variable `ADMIN_PASSCODE` en `.env.local`).
 
 Variables de entorno (ver `.env.example`):
 
-- `DATABASE_URL` — en local queda `file:./dev.db` (SQLite, no requiere nada más).
+- `DATABASE_URL` — connection string de Postgres (Neon). Se usa la misma base
+  en local y en producción.
 - `ADMIN_PASSCODE` — la contraseña para entrar a `/admin`. Cambiala cuando quieras.
 - `SESSION_SECRET` — clave para firmar la cookie de sesión. Generar con:
   ```bash
@@ -45,9 +46,10 @@ npm run db:studio
 
 ## Cómo funciona
 
-- **`/admin`** (protegido por passcode): alta de alumnos, carga y edición de
-  rutinas (por días y ejercicios), registro de peso corporal, e historial de
-  entrenamientos completados.
+- **`/admin`** (protegido por passcode): barra lateral con los alumnos, alta
+  de alumnos, carga y edición de rutinas (por días, con bloques opcionales
+  para ejercicios en circuito/superserie), registro de peso corporal, e
+  historial de entrenamientos completados.
 - **`/r/[token]`** (público, sin login): cada alumno tiene un link único desde
   el botón "Copiar link del alumno" en su ficha. Ahí ve su rutina activa,
   puede marcar el día como completado y registrar su peso.
@@ -57,47 +59,17 @@ npm run db:studio
 - Cada vez que guardás una rutina nueva para un alumno, la anterior queda en
   el historial (no se borra) y la nueva pasa a ser la activa.
 
-## Deploy a producción (Vercel + Neon)
+## Deploy a producción (Vercel)
 
-La app está pensada para desarrollarse en local con SQLite y desplegarse con
-PostgreSQL. Pasos:
+La base de datos (Neon) ya está conectada y migrada. Para publicar la app:
 
-1. **Crear una base en Neon** ([neon.tech](https://neon.tech), tiene plan
-   gratuito). Copiá la connection string (`postgresql://...`).
-2. **Cambiar el datasource** en `prisma/schema.prisma`:
-   ```prisma
-   datasource db {
-     provider = "postgresql"
-   }
-   ```
-3. **Cambiar el driver adapter** en `src/lib/db.ts`: reemplazar
-   `@prisma/adapter-better-sqlite3` por `@prisma/adapter-pg`:
-   ```bash
-   npm install @prisma/adapter-pg pg
-   npm uninstall @prisma/adapter-better-sqlite3 better-sqlite3
-   ```
-   ```ts
-   import { PrismaPg } from "@prisma/adapter-pg";
-   import { PrismaClient } from "@/generated/prisma/client";
-
-   function createClient() {
-     const url = process.env.DATABASE_URL;
-     if (!url) throw new Error("Falta DATABASE_URL en las variables de entorno");
-     const adapter = new PrismaPg({ connectionString: url });
-     return new PrismaClient({ adapter });
-   }
-   // ... el resto del archivo queda igual
-   ```
-4. **Migrar el schema a la base de Neon**:
-   ```bash
-   DATABASE_URL="postgresql://..." npx prisma migrate deploy
-   ```
-5. **Subir el proyecto a GitHub** y crear un proyecto nuevo en
-   [vercel.com](https://vercel.com) importando ese repo.
-6. **Variables de entorno en Vercel** (Project Settings → Environment
-   Variables): `DATABASE_URL` (la de Neon), `ADMIN_PASSCODE`, `SESSION_SECRET`.
-7. Deploy. Los links `/r/[token]` van a funcionar con el dominio que te da
+1. **Subir el proyecto a GitHub** (ya hecho: [github.com/matifagoaga/RutinasApp](https://github.com/matifagoaga/RutinasApp)).
+2. Crear un proyecto nuevo en [vercel.com](https://vercel.com) importando ese repo.
+3. **Variables de entorno en Vercel** (Project Settings → Environment
+   Variables): copiar `DATABASE_URL`, `ADMIN_PASSCODE` y `SESSION_SECRET`
+   desde el `.env` / `.env.local` local.
+4. Deploy. Los links `/r/[token]` van a funcionar con el dominio que te da
    Vercel (o el que configures).
 
-La creación de las cuentas de GitHub/Vercel/Neon y el login en esos sitios
-los hace el entrenador — esto es solo la guía de los pasos técnicos.
+La creación de la cuenta de Vercel y el login la hace el entrenador — esto
+es solo la guía de los pasos técnicos.
