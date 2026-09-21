@@ -22,11 +22,40 @@ model Student {
   // Nota manual del entrenador ("marcar para seguimiento"). No nulo = está
   // marcado y aparece en "Necesitan atención" del panel de inicio.
   attentionNote String?
+  // Si pertenece a un equipo, es un "jugador": misma ficha que un alumno,
+  // pero con Testeos en vez de Pagos (eso lo maneja el club).
+  teamId String?
+  team   Team?   @relation(fields: [teamId], references: [id], onDelete: SetNull)
 
   routines    Routine[]
   workoutLogs WorkoutLog[]
   bodyMetrics BodyMetric[]
   payments    Payment[]
+  testeos     Testeo[]
+
+  @@index([teamId])
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  players Student[]
+}
+
+// Prueba física libre (nombre + valor a elección del entrenador, ej.
+// "Sprint 40m" -> "5.2 seg"), para trackear el progreso de un jugador.
+model Testeo {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  name      String
+  value     String
+  date      DateTime @default(now())
+  notes     String?
+
+  @@index([studentId])
 }
 
 model Routine {

@@ -3,9 +3,12 @@ import Link from "next/link";
 import {
   getActiveRoutine,
   getBodyMetrics,
+  getDistinctTesteoNames,
   getPayments,
   getRecentWorkoutLogs,
   getStudentById,
+  getTeams,
+  getTesteos,
 } from "@/lib/data";
 import { getBaseUrl } from "@/lib/url";
 import { formatDate, formatMonthLabel, getCurrentMonthKey } from "@/lib/format";
@@ -15,12 +18,15 @@ import { Sparkline } from "@/components/Sparkline";
 import { ExerciseTable } from "@/components/ExerciseTable";
 import { DeleteStudentButton } from "@/components/DeleteStudentButton";
 import { AttentionFlag } from "@/components/AttentionFlag";
+import { TeamAssignSelect } from "@/components/TeamAssignSelect";
 import {
+  addTesteoAction,
   clearAttentionNoteAction,
   deleteStudentAction,
   logBodyMetricAction,
   registerPaymentAction,
   setAttentionNoteAction,
+  setStudentTeamAction,
 } from "./actions";
 
 export default async function StudentDetailPage({
@@ -32,13 +38,19 @@ export default async function StudentDetailPage({
   const student = await getStudentById(id);
   if (!student) notFound();
 
-  const [routine, workoutLogs, bodyMetrics, payments, baseUrl] = await Promise.all([
-    getActiveRoutine(id),
-    getRecentWorkoutLogs(id, 10),
-    getBodyMetrics(id, 30),
-    getPayments(id, 12),
-    getBaseUrl(),
-  ]);
+  const isPlayer = student.teamId != null;
+
+  const [routine, workoutLogs, bodyMetrics, payments, testeos, testeoNames, teams, baseUrl] =
+    await Promise.all([
+      getActiveRoutine(id),
+      getRecentWorkoutLogs(id, 10),
+      getBodyMetrics(id, 30),
+      isPlayer ? Promise.resolve([] as Awaited<ReturnType<typeof getPayments>>) : getPayments(id, 12),
+      isPlayer ? getTesteos(id) : Promise.resolve([] as Awaited<ReturnType<typeof getTesteos>>),
+      isPlayer ? getDistinctTesteoNames() : Promise.resolve([] as string[]),
+      getTeams(),
+      getBaseUrl(),
+    ]);
 
   const publicUrl = `${baseUrl}/r/${student.token}`;
   const sparklinePoints = [...bodyMetrics]
@@ -49,11 +61,19 @@ export default async function StudentDetailPage({
   const currentMonth = getCurrentMonthKey();
   const paidCurrentMonth = payments.some((p) => p.month === currentMonth);
 
+  const testeoGroups = new Map<string, typeof testeos>();
+  for (const t of testeos) {
+    if (!testeoGroups.has(t.name)) testeoGroups.set(t.name, []);
+    testeoGroups.get(t.name)!.push(t);
+  }
+
   const boundLogMetric = logBodyMetricAction.bind(null, id);
   const boundRegisterPayment = registerPaymentAction.bind(null, id);
+  const boundAddTesteo = addTesteoAction.bind(null, id);
   const boundDelete = deleteStudentAction.bind(null, id);
   const boundSetAttention = setAttentionNoteAction.bind(null, id);
   const boundClearAttention = clearAttentionNoteAction.bind(null, id);
+  const boundSetTeam = setStudentTeamAction.bind(null, id);
 
   return (
     <div className="flex flex-col gap-8">
@@ -66,6 +86,10 @@ export default async function StudentDetailPage({
                 {[student.email, student.phone].filter(Boolean).join(" · ")}
               </p>
             )}
+            <div className="mt-2 flex items-center gap-2">
+              <label className="no-print text-xs text-zinc-500">Equipo</label>
+              <TeamAssignSelect teams={teams} currentTeamId={student.teamId} onChange={boundSetTeam} />
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             <CopyLinkButton url={publicUrl} />
@@ -126,64 +150,150 @@ export default async function StudentDetailPage({
       </section>
 
       <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm dark:border-emerald-950 dark:bg-zinc-950">
-          <div className="flex items-center justify-between gap-2">
+        {isPlayer ? (
+          <div className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm dark:border-emerald-950 dark:bg-zinc-950">
             <h2 className="flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-              <span>💳</span> Pagos
+              <span>🧪</span> Testeos
             </h2>
-            <span
-              className={`no-print rounded-full px-2.5 py-1 text-xs font-semibold ${
-                paidCurrentMonth
-                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300"
-                  : "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
-              }`}
-            >
-              {paidCurrentMonth ? "Al día" : "Pendiente"} · {formatMonthLabel(currentMonth)}
-            </span>
+            {testeoGroups.size === 0 ? (
+              <p className="mt-2 text-sm text-zinc-500">Todavía no hay testeos registrados.</p>
+            ) : (
+              <div className="mt-3 flex flex-col gap-4">
+                {[...testeoGroups.entries()].map(([name, entries]) => {
+                  const points = [...entries]
+                    .reverse()
+                    .map((t) => parseFloat(t.value))
+                    .filter((v) => !Number.isNaN(v));
+                  return (
+                    <div key={name}>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                        {name}
+                      </p>
+                      {points.length >= 2 && (
+                        <div className="mt-1">
+                          <Sparkline points={points} />
+                        </div>
+                      )}
+                      <ul className="mt-1 flex flex-col gap-1 text-sm text-zinc-600 dark:text-zinc-300">
+                        {entries.slice(0, 4).map((t) => (
+                          <li key={t.id} className="flex justify-between gap-2">
+                            <span>{formatDate(t.date)}</span>
+                            <span className="text-right">
+                              {t.value}
+                              {t.notes ? ` · ${t.notes}` : ""}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <form action={boundAddTesteo} className="no-print mt-4 flex flex-col gap-2">
+              <datalist id="testeo-names">
+                {testeoNames.map((n) => (
+                  <option key={n} value={n} />
+                ))}
+              </datalist>
+              <div className="flex flex-wrap items-end gap-2">
+                <div className="min-w-[140px] flex-1">
+                  <label className="block text-xs text-zinc-500">Testeo</label>
+                  <input
+                    type="text"
+                    name="name"
+                    list="testeo-names"
+                    placeholder="Ej: Sprint 40m"
+                    className="w-full rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-zinc-500">Valor</label>
+                  <input
+                    type="text"
+                    name="value"
+                    placeholder="Ej: 5.2 seg"
+                    className="w-28 rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-zinc-500">Fecha</label>
+                  <input
+                    type="date"
+                    name="date"
+                    defaultValue={new Date().toISOString().slice(0, 10)}
+                    className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                className="self-start rounded-lg bg-emerald-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
+              >
+                Registrar testeo
+              </button>
+            </form>
           </div>
-          {payments.length === 0 ? (
-            <p className="mt-2 text-sm text-zinc-500">Todavía no hay pagos registrados.</p>
-          ) : (
-            <ul className="mt-3 flex flex-col gap-1 text-sm text-zinc-600 dark:text-zinc-300">
-              {payments.slice(0, 6).map((p) => (
-                <li key={p.id} className="flex justify-between gap-2">
-                  <span>{formatMonthLabel(p.month)}</span>
-                  <span className="text-right">
-                    {p.amount != null ? `$${p.amount}` : ""}
-                    {p.notes ? ` · ${p.notes}` : ""}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-          <form action={boundRegisterPayment} className="no-print mt-4 flex flex-wrap items-end gap-2">
-            <div>
-              <label className="block text-xs text-zinc-500">Mes</label>
-              <input
-                type="month"
-                name="month"
-                defaultValue={currentMonth}
-                className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
-              />
+        ) : (
+          <div className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm dark:border-emerald-950 dark:bg-zinc-950">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                <span>💳</span> Pagos
+              </h2>
+              <span
+                className={`no-print rounded-full px-2.5 py-1 text-xs font-semibold ${
+                  paidCurrentMonth
+                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300"
+                    : "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
+                }`}
+              >
+                {paidCurrentMonth ? "Al día" : "Pendiente"} · {formatMonthLabel(currentMonth)}
+              </span>
             </div>
-            <div>
-              <label className="block text-xs text-zinc-500">Monto</label>
-              <input
-                type="number"
-                step="0.01"
-                name="amount"
-                placeholder="Opcional"
-                className="w-24 rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
-              />
-            </div>
-            <button
-              type="submit"
-              className="rounded-lg bg-emerald-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
-            >
-              Registrar pago
-            </button>
-          </form>
-        </div>
+            {payments.length === 0 ? (
+              <p className="mt-2 text-sm text-zinc-500">Todavía no hay pagos registrados.</p>
+            ) : (
+              <ul className="mt-3 flex flex-col gap-1 text-sm text-zinc-600 dark:text-zinc-300">
+                {payments.slice(0, 6).map((p) => (
+                  <li key={p.id} className="flex justify-between gap-2">
+                    <span>{formatMonthLabel(p.month)}</span>
+                    <span className="text-right">
+                      {p.amount != null ? `$${p.amount}` : ""}
+                      {p.notes ? ` · ${p.notes}` : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <form action={boundRegisterPayment} className="no-print mt-4 flex flex-wrap items-end gap-2">
+              <div>
+                <label className="block text-xs text-zinc-500">Mes</label>
+                <input
+                  type="month"
+                  name="month"
+                  defaultValue={currentMonth}
+                  className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-zinc-500">Monto</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  name="amount"
+                  placeholder="Opcional"
+                  className="w-24 rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+                />
+              </div>
+              <button
+                type="submit"
+                className="rounded-lg bg-emerald-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
+              >
+                Registrar pago
+              </button>
+            </form>
+          </div>
+        )}
 
         <div className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm dark:border-emerald-950 dark:bg-zinc-950">
           <h2 className="flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">

@@ -23,6 +23,7 @@ export function createStudent(input: {
   email?: string | null;
   phone?: string | null;
   notes?: string | null;
+  teamId?: string | null;
 }) {
   return db.student.create({
     data: {
@@ -30,8 +31,76 @@ export function createStudent(input: {
       email: input.email || null,
       phone: input.phone || null,
       notes: input.notes || null,
+      teamId: input.teamId || null,
     },
   });
+}
+
+export function setStudentTeam(studentId: string, teamId: string | null) {
+  return db.student.update({ where: { id: studentId }, data: { teamId } });
+}
+
+// ---------- Equipos ----------
+
+export function getTeams() {
+  return db.team.findMany({
+    orderBy: { name: "asc" },
+    include: { _count: { select: { players: true } } },
+  });
+}
+
+export function getTeamById(id: string) {
+  return db.team.findUnique({ where: { id } });
+}
+
+export function getTeamPlayers(teamId: string) {
+  return db.student.findMany({ where: { teamId }, orderBy: { name: "asc" } });
+}
+
+export function createTeam(name: string) {
+  return db.team.create({ data: { name } });
+}
+
+export function deleteTeam(id: string) {
+  return db.team.delete({ where: { id } });
+}
+
+// ---------- Testeos ----------
+
+export function getTesteos(studentId: string, limit = 100) {
+  return db.testeo.findMany({
+    where: { studentId },
+    orderBy: { date: "desc" },
+    take: limit,
+  });
+}
+
+export function addTesteo(
+  studentId: string,
+  input: { name: string; value: string; date?: Date; notes?: string | null }
+) {
+  return db.testeo.create({
+    data: {
+      studentId,
+      name: input.name,
+      value: input.value,
+      date: input.date ?? new Date(),
+      notes: input.notes || null,
+    },
+  });
+}
+
+export function deleteTesteo(id: string) {
+  return db.testeo.delete({ where: { id } });
+}
+
+export async function getDistinctTesteoNames() {
+  const rows = await db.testeo.findMany({
+    distinct: ["name"],
+    select: { name: true },
+    orderBy: { name: "asc" },
+  });
+  return rows.map((r) => r.name);
 }
 
 // ---------- Rutinas ----------

@@ -16,6 +16,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </Link>
           <div className="flex items-center gap-4">
             <Link
+              href="/admin/teams"
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-emerald-100 hover:bg-white/10 hover:text-white"
+            >
+              🏟️ Equipos
+            </Link>
+            <Link
               href="/admin/exercises"
               className="rounded-lg px-3 py-1.5 text-sm font-medium text-emerald-100 hover:bg-white/10 hover:text-white"
             >
