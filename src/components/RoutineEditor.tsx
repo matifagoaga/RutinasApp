@@ -1,18 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { processImageFile } from "@/lib/image";
-
-type ExerciseState = {
-  name: string;
-  sets: string;
-  reps: string;
-  weight: string;
-  restSeconds: string;
-  notes: string;
-  videoUrl: string;
-  imageData: string;
-};
+import { ExerciseRowEditor } from "./ExerciseRowEditor";
+import {
+  exerciseFromTemplate,
+  type ExerciseState,
+  type LibraryExerciseOption,
+} from "./routineTypes";
 
 type BlockState = {
   label: string;
@@ -45,18 +39,7 @@ export type SavedDay = {
   blocks: SavedBlock[];
 };
 
-export type LibraryExerciseOption = {
-  id: string;
-  name: string;
-  category: string | null;
-  sets: number;
-  reps: string;
-  weight: string | null;
-  restSeconds: number | null;
-  notes: string | null;
-  videoUrl: string | null;
-  imageData: string | null;
-};
+export type { LibraryExerciseOption };
 
 function blockLabelForIndex(index: number) {
   return `Bloque ${String.fromCharCode(65 + index)}`;
@@ -83,19 +66,6 @@ function emptyBlock(index: number): BlockState {
 
 function emptyDay(n: number): DayState {
   return { label: WEEKDAYS[(n - 1) % WEEKDAYS.length], blocks: [emptyBlock(0)] };
-}
-
-function exerciseFromTemplate(template: LibraryExerciseOption): ExerciseState {
-  return {
-    name: template.name,
-    sets: String(template.sets),
-    reps: template.reps,
-    weight: template.weight ?? "",
-    restSeconds: template.restSeconds != null ? String(template.restSeconds) : "",
-    notes: template.notes ?? "",
-    videoUrl: template.videoUrl ?? "",
-    imageData: template.imageData ?? "",
-  };
 }
 
 export function RoutineEditor({
@@ -151,22 +121,6 @@ export function RoutineEditor({
             }
       )
     );
-  }
-
-  async function handleImageChange(
-    dayIndex: number,
-    blockIndex: number,
-    exIndex: number,
-    file: File | null
-  ) {
-    if (!file) return;
-    setError(null);
-    try {
-      const processed = await processImageFile(file);
-      updateExercise(dayIndex, blockIndex, exIndex, { imageData: processed });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo procesar la imagen.");
-    }
   }
 
   function addDay() {
@@ -374,124 +328,13 @@ export function RoutineEditor({
 
                     <div className="flex flex-col gap-3">
                       {block.exercises.map((ex, exIndex) => (
-                        <div
+                        <ExerciseRowEditor
                           key={exIndex}
-                          className="rounded-xl border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-950"
-                        >
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="text"
-                              value={ex.name}
-                              onChange={(e) =>
-                                updateExercise(dayIndex, blockIndex, exIndex, { name: e.target.value })
-                              }
-                              placeholder="Ejercicio (ej: Sentadilla)"
-                              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removeExercise(dayIndex, blockIndex, exIndex)}
-                              className="shrink-0 text-sm text-zinc-400 hover:text-red-600"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                            <input
-                              type="number"
-                              min={1}
-                              value={ex.sets}
-                              onChange={(e) =>
-                                updateExercise(dayIndex, blockIndex, exIndex, { sets: e.target.value })
-                              }
-                              placeholder="Series"
-                              className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
-                            />
-                            <input
-                              type="text"
-                              value={ex.reps}
-                              onChange={(e) =>
-                                updateExercise(dayIndex, blockIndex, exIndex, { reps: e.target.value })
-                              }
-                              placeholder="Reps (ej 8-12)"
-                              className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
-                            />
-                            <input
-                              type="text"
-                              value={ex.weight}
-                              onChange={(e) =>
-                                updateExercise(dayIndex, blockIndex, exIndex, { weight: e.target.value })
-                              }
-                              placeholder="Peso sugerido"
-                              className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
-                            />
-                            <input
-                              type="number"
-                              min={0}
-                              value={ex.restSeconds}
-                              onChange={(e) =>
-                                updateExercise(dayIndex, blockIndex, exIndex, { restSeconds: e.target.value })
-                              }
-                              placeholder="Descanso (seg)"
-                              className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
-                            />
-                          </div>
-                          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                            <input
-                              type="text"
-                              value={ex.notes}
-                              onChange={(e) =>
-                                updateExercise(dayIndex, blockIndex, exIndex, { notes: e.target.value })
-                              }
-                              placeholder="Notas (opcional)"
-                              className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
-                            />
-                            <input
-                              type="text"
-                              value={ex.videoUrl}
-                              onChange={(e) =>
-                                updateExercise(dayIndex, blockIndex, exIndex, { videoUrl: e.target.value })
-                              }
-                              placeholder="Link de video (opcional)"
-                              className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
-                            />
-                          </div>
-
-                          <div className="mt-3 flex items-center gap-3">
-                            {ex.imageData ? (
-                              <>
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                  src={ex.imageData}
-                                  alt=""
-                                  className="h-14 w-14 rounded-lg border border-zinc-200 object-cover dark:border-zinc-800"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    updateExercise(dayIndex, blockIndex, exIndex, { imageData: "" })
-                                  }
-                                  className="text-xs font-medium text-red-600 hover:text-red-700"
-                                >
-                                  Quitar foto/GIF
-                                </button>
-                              </>
-                            ) : (
-                              <label className="cursor-pointer text-xs font-medium text-emerald-700 hover:text-emerald-900 dark:text-emerald-400">
-                                + Foto o GIF del ejercicio
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  onChange={(e) => {
-                                    handleImageChange(dayIndex, blockIndex, exIndex, e.target.files?.[0] ?? null);
-                                    e.target.value = "";
-                                  }}
-                                />
-                              </label>
-                            )}
-                          </div>
-                        </div>
+                          exercise={ex}
+                          libraryExercises={libraryExercises}
+                          onChange={(patch) => updateExercise(dayIndex, blockIndex, exIndex, patch)}
+                          onRemove={() => removeExercise(dayIndex, blockIndex, exIndex)}
+                        />
                       ))}
 
                       <div className="flex flex-wrap items-center gap-3">
