@@ -19,6 +19,9 @@ model Student {
   token     String   @unique @default(cuid())
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
+  // Nota manual del entrenador ("marcar para seguimiento"). No nulo = está
+  // marcado y aparece en "Necesitan atención" del panel de inicio.
+  attentionNote String?
 
   routines    Routine[]
   workoutLogs WorkoutLog[]

@@ -253,15 +253,23 @@ export async function getStudentsNeedingAttention() {
         ? Math.floor((now - lastWorkoutDate.getTime()) / DAY_MS)
         : null;
 
-      let reason: string | null = null;
-      if (!hasRoutine) reason = "Todavía no tiene una rutina cargada";
-      else if (daysSinceLastWorkout === null) reason = "Nunca marcó un entrenamiento";
+      const reasons: string[] = [];
+      if (student.attentionNote) reasons.push(student.attentionNote);
+      if (!hasRoutine) reasons.push("Todavía no tiene una rutina cargada");
+      else if (daysSinceLastWorkout === null) reasons.push("Nunca marcó un entrenamiento");
       else if (daysSinceLastWorkout >= ATTENTION_THRESHOLD_DAYS)
-        reason = `Hace ${daysSinceLastWorkout} días que no entrena`;
+        reasons.push(`Hace ${daysSinceLastWorkout} días que no entrena`);
 
-      return { id: student.id, name: student.name, reason };
+      return { id: student.id, name: student.name, reason: reasons.join(" · ") || null };
     })
     .filter((student): student is { id: string; name: string; reason: string } => student.reason != null);
+}
+
+export function setStudentAttentionNote(studentId: string, note: string | null) {
+  return db.student.update({
+    where: { id: studentId },
+    data: { attentionNote: note },
+  });
 }
 
 // ---------- Pagos ----------

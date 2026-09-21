@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdminSession } from "@/lib/auth";
-import { deleteStudent, logBodyMetric, registerPayment } from "@/lib/data";
+import { deleteStudent, logBodyMetric, registerPayment, setStudentAttentionNote } from "@/lib/data";
 
 export async function logBodyMetricAction(studentId: string, formData: FormData) {
   await requireAdminSession();
@@ -38,6 +38,21 @@ export async function registerPaymentAction(studentId: string, formData: FormDat
 
   await registerPayment(studentId, { month, amount, notes: notes || null });
   revalidatePath(`/admin/students/${studentId}`);
+}
+
+export async function setAttentionNoteAction(studentId: string, formData: FormData) {
+  await requireAdminSession();
+  const note = String(formData.get("note") ?? "").trim();
+  await setStudentAttentionNote(studentId, note || null);
+  revalidatePath(`/admin/students/${studentId}`);
+  revalidatePath("/admin");
+}
+
+export async function clearAttentionNoteAction(studentId: string) {
+  await requireAdminSession();
+  await setStudentAttentionNote(studentId, null);
+  revalidatePath(`/admin/students/${studentId}`);
+  revalidatePath("/admin");
 }
 
 export async function deleteStudentAction(studentId: string) {

@@ -14,7 +14,14 @@ import { PrintButton } from "@/components/PrintButton";
 import { Sparkline } from "@/components/Sparkline";
 import { ExerciseTable } from "@/components/ExerciseTable";
 import { DeleteStudentButton } from "@/components/DeleteStudentButton";
-import { deleteStudentAction, logBodyMetricAction, registerPaymentAction } from "./actions";
+import { AttentionFlag } from "@/components/AttentionFlag";
+import {
+  clearAttentionNoteAction,
+  deleteStudentAction,
+  logBodyMetricAction,
+  registerPaymentAction,
+  setAttentionNoteAction,
+} from "./actions";
 
 export default async function StudentDetailPage({
   params,
@@ -45,29 +52,38 @@ export default async function StudentDetailPage({
   const boundLogMetric = logBodyMetricAction.bind(null, id);
   const boundRegisterPayment = registerPaymentAction.bind(null, id);
   const boundDelete = deleteStudentAction.bind(null, id);
+  const boundSetAttention = setAttentionNoteAction.bind(null, id);
+  const boundClearAttention = clearAttentionNoteAction.bind(null, id);
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-emerald-100 pb-5 dark:border-emerald-950">
-        <div>
-          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{student.name}</h1>
-          {(student.email || student.phone) && (
-            <p className="text-sm text-zinc-500">
-              {[student.email, student.phone].filter(Boolean).join(" · ")}
-            </p>
-          )}
+      <div className="flex flex-col gap-4 border-b border-emerald-100 pb-5 dark:border-emerald-950">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{student.name}</h1>
+            {(student.email || student.phone) && (
+              <p className="text-sm text-zinc-500">
+                {[student.email, student.phone].filter(Boolean).join(" · ")}
+              </p>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <CopyLinkButton url={publicUrl} />
+            <PrintButton />
+            <Link
+              href={`/admin/students/${id}/routine`}
+              className="no-print rounded-lg bg-emerald-800 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700"
+            >
+              {routine ? "Editar rutina" : "Crear rutina"}
+            </Link>
+            <DeleteStudentButton studentName={student.name} onDelete={boundDelete} />
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <CopyLinkButton url={publicUrl} />
-          <PrintButton />
-          <Link
-            href={`/admin/students/${id}/routine`}
-            className="no-print rounded-lg bg-emerald-800 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700"
-          >
-            {routine ? "Editar rutina" : "Crear rutina"}
-          </Link>
-          <DeleteStudentButton studentName={student.name} onDelete={boundDelete} />
-        </div>
+        <AttentionFlag
+          initialNote={student.attentionNote}
+          onSetNote={boundSetAttention}
+          onClear={boundClearAttention}
+        />
       </div>
 
       <section>
