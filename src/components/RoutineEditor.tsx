@@ -48,6 +48,7 @@ export type SavedDay = {
 export type LibraryExerciseOption = {
   id: string;
   name: string;
+  category: string | null;
   sets: number;
   reps: string;
   weight: string | null;
@@ -287,6 +288,17 @@ export function RoutineEditor({
     });
   }
 
+  const libraryGroups: [string, LibraryExerciseOption[]][] = [];
+  for (const template of libraryExercises) {
+    const key = template.category ?? "Sin categoría";
+    let group = libraryGroups.find(([category]) => category === key);
+    if (!group) {
+      group = [key, []];
+      libraryGroups.push(group);
+    }
+    group[1].push(template);
+  }
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div>
@@ -499,10 +511,14 @@ export function RoutineEditor({
                             className="rounded-lg border border-zinc-300 px-2 py-1 text-xs outline-none focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
                           >
                             <option value="">+ Desde la biblioteca...</option>
-                            {libraryExercises.map((template) => (
-                              <option key={template.id} value={template.id}>
-                                {template.name}
-                              </option>
+                            {libraryGroups.map(([category, items]) => (
+                              <optgroup key={category} label={category}>
+                                {items.map((template) => (
+                                  <option key={template.id} value={template.id}>
+                                    {template.name}
+                                  </option>
+                                ))}
+                              </optgroup>
                             ))}
                           </select>
                         )}

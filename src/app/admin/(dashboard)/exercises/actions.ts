@@ -14,6 +14,7 @@ function parseTemplateInput(formData: FormData): ExerciseTemplateInput {
   const name = String(formData.get("name") ?? "").trim();
   if (!name) throw new Error("El nombre es obligatorio");
 
+  const category = String(formData.get("category") ?? "").trim();
   const setsRaw = String(formData.get("sets") ?? "").trim();
   const sets = Math.max(1, Number(setsRaw) || 1);
 
@@ -26,6 +27,7 @@ function parseTemplateInput(formData: FormData): ExerciseTemplateInput {
 
   return {
     name,
+    category: category || null,
     sets,
     reps,
     weight: weight || null,

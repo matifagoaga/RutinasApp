@@ -2,9 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { processImageFile } from "@/lib/image";
+import { EXERCISE_CATEGORIES } from "@/lib/exerciseCategories";
 
 export type ExerciseTemplateFormValues = {
   name: string;
+  category: string;
   sets: string;
   reps: string;
   weight: string;
@@ -16,6 +18,7 @@ export type ExerciseTemplateFormValues = {
 
 const EMPTY_VALUES: ExerciseTemplateFormValues = {
   name: "",
+  category: "",
   sets: "3",
   reps: "10-12",
   weight: "",
@@ -54,14 +57,28 @@ export function ExerciseTemplateForm({
       className="flex flex-col gap-3"
     >
       <input type="hidden" name="imageData" value={imageData} />
-      <input
-        type="text"
-        name="name"
-        required
-        defaultValue={initial.name}
-        placeholder="Ejercicio (ej: Sentadilla)"
-        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
-      />
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
+        <input
+          type="text"
+          name="name"
+          required
+          defaultValue={initial.name}
+          placeholder="Ejercicio (ej: Sentadilla)"
+          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+        />
+        <select
+          name="category"
+          defaultValue={initial.category}
+          className="rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+        >
+          <option value="">Sin categoría</option>
+          {EXERCISE_CATEGORIES.map((category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <input
           type="number"

@@ -304,6 +304,7 @@ export function registerPayment(
 
 export type ExerciseTemplateInput = {
   name: string;
+  category?: string | null;
   sets: number;
   reps: string;
   weight?: string | null;
@@ -314,7 +315,7 @@ export type ExerciseTemplateInput = {
 };
 
 export function getExerciseTemplates() {
-  return db.exerciseTemplate.findMany({ orderBy: { name: "asc" } });
+  return db.exerciseTemplate.findMany({ orderBy: [{ category: "asc" }, { name: "asc" }] });
 }
 
 export function getExerciseTemplateById(id: string) {
@@ -325,6 +326,7 @@ export function createExerciseTemplate(input: ExerciseTemplateInput) {
   return db.exerciseTemplate.create({
     data: {
       name: input.name,
+      category: input.category || null,
       sets: input.sets,
       reps: input.reps,
       weight: input.weight || null,
@@ -341,6 +343,7 @@ export function updateExerciseTemplate(id: string, input: ExerciseTemplateInput)
     where: { id },
     data: {
       name: input.name,
+      category: input.category || null,
       sets: input.sets,
       reps: input.reps,
       weight: input.weight || null,

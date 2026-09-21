@@ -31,6 +31,7 @@ export default async function EditExerciseTemplatePage({
         <ExerciseTemplateForm
           initial={{
             name: template.name,
+            category: template.category ?? "",
             sets: String(template.sets),
             reps: template.reps,
             weight: template.weight ?? "",
