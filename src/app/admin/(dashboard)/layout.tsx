@@ -14,14 +14,22 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <span className="text-xl">🏋️</span>
             RutinasApp
           </Link>
-          <form action={logout}>
-            <button
-              type="submit"
+          <div className="flex items-center gap-4">
+            <Link
+              href="/admin/exercises"
               className="rounded-lg px-3 py-1.5 text-sm font-medium text-emerald-100 hover:bg-white/10 hover:text-white"
             >
-              Cerrar sesión
-            </button>
-          </form>
+              📚 Biblioteca
+            </Link>
+            <form action={logout}>
+              <button
+                type="submit"
+                className="rounded-lg px-3 py-1.5 text-sm font-medium text-emerald-100 hover:bg-white/10 hover:text-white"
+              >
+                Cerrar sesión
+              </button>
+            </form>
+          </div>
         </div>
       </header>
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 md:flex-row">

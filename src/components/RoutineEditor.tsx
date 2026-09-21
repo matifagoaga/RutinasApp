@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { processImageFile } from "@/lib/image";
 
 type ExerciseState = {
   name: string;
@@ -44,10 +45,17 @@ export type SavedDay = {
   blocks: SavedBlock[];
 };
 
-const MAX_GIF_BYTES = 3 * 1024 * 1024; // 3MB
-const MAX_SOURCE_BYTES = 15 * 1024 * 1024; // 15MB tope antes de procesar
-const MAX_DIMENSION = 900;
-const JPEG_QUALITY = 0.82;
+export type LibraryExerciseOption = {
+  id: string;
+  name: string;
+  sets: number;
+  reps: string;
+  weight: string | null;
+  restSeconds: number | null;
+  notes: string | null;
+  videoUrl: string | null;
+  imageData: string | null;
+};
 
 function blockLabelForIndex(index: number) {
   return `Bloque ${String.fromCharCode(65 + index)}`;
@@ -76,63 +84,28 @@ function emptyDay(n: number): DayState {
   return { label: WEEKDAYS[(n - 1) % WEEKDAYS.length], blocks: [emptyBlock(0)] };
 }
 
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
-}
-
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new window.Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("No se pudo leer la imagen"));
-    img.src = src;
-  });
-}
-
-async function compressImage(dataUrl: string): Promise<string> {
-  const img = await loadImage(dataUrl);
-  const scale = Math.min(1, MAX_DIMENSION / Math.max(img.width, img.height));
-  const width = Math.round(img.width * scale);
-  const height = Math.round(img.height * scale);
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return dataUrl;
-  ctx.drawImage(img, 0, 0, width, height);
-  return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
-}
-
-async function processImageFile(file: File): Promise<string> {
-  if (file.size > MAX_SOURCE_BYTES) {
-    throw new Error("La imagen es muy pesada (máx 15MB).");
-  }
-  if (file.type === "image/gif") {
-    if (file.size > MAX_GIF_BYTES) {
-      throw new Error("El GIF es muy pesado (máx 3MB). Probá con uno más corto o liviano.");
-    }
-    return readFileAsDataUrl(file);
-  }
-  const dataUrl = await readFileAsDataUrl(file);
-  try {
-    return await compressImage(dataUrl);
-  } catch {
-    return dataUrl;
-  }
+function exerciseFromTemplate(template: LibraryExerciseOption): ExerciseState {
+  return {
+    name: template.name,
+    sets: String(template.sets),
+    reps: template.reps,
+    weight: template.weight ?? "",
+    restSeconds: template.restSeconds != null ? String(template.restSeconds) : "",
+    notes: template.notes ?? "",
+    videoUrl: template.videoUrl ?? "",
+    imageData: template.imageData ?? "",
+  };
 }
 
 export function RoutineEditor({
   initialTitle,
   initialDays,
+  libraryExercises = [],
   onSave,
 }: {
   initialTitle: string;
   initialDays: DayState[];
+  libraryExercises?: LibraryExerciseOption[];
   onSave: (title: string, days: SavedDay[]) => Promise<void>;
 }) {
   const [title, setTitle] = useState(initialTitle);
@@ -226,6 +199,25 @@ export function RoutineEditor({
               ...day,
               blocks: day.blocks.map((block, j) =>
                 j === blockIndex ? { ...block, exercises: [...block.exercises, emptyExercise()] } : block
+              ),
+            }
+      )
+    );
+  }
+
+  function addExerciseFromLibrary(dayIndex: number, blockIndex: number, templateId: string) {
+    const template = libraryExercises.find((t) => t.id === templateId);
+    if (!template) return;
+    setDays((prev) =>
+      prev.map((day, i) =>
+        i !== dayIndex
+          ? day
+          : {
+              ...day,
+              blocks: day.blocks.map((block, j) =>
+                j === blockIndex
+                  ? { ...block, exercises: [...block.exercises, exerciseFromTemplate(template)] }
+                  : block
               ),
             }
       )
@@ -490,13 +482,31 @@ export function RoutineEditor({
                         </div>
                       ))}
 
-                      <button
-                        type="button"
-                        onClick={() => addExercise(dayIndex, blockIndex)}
-                        className="self-start text-sm font-medium text-emerald-700 hover:text-emerald-900 dark:text-emerald-400"
-                      >
-                        + Agregar ejercicio{showBlockChrome ? ` a ${block.label || "este bloque"}` : ""}
-                      </button>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => addExercise(dayIndex, blockIndex)}
+                          className="self-start text-sm font-medium text-emerald-700 hover:text-emerald-900 dark:text-emerald-400"
+                        >
+                          + Agregar ejercicio{showBlockChrome ? ` a ${block.label || "este bloque"}` : ""}
+                        </button>
+                        {libraryExercises.length > 0 && (
+                          <select
+                            value=""
+                            onChange={(e) => {
+                              if (e.target.value) addExerciseFromLibrary(dayIndex, blockIndex, e.target.value);
+                            }}
+                            className="rounded-lg border border-zinc-300 px-2 py-1 text-xs outline-none focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
+                          >
+                            <option value="">+ Desde la biblioteca...</option>
+                            {libraryExercises.map((template) => (
+                              <option key={template.id} value={template.id}>
+                                {template.name}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}

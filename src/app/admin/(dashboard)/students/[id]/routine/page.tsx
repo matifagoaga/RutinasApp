@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getActiveRoutine, getStudentById } from "@/lib/data";
+import { getActiveRoutine, getExerciseTemplates, getStudentById } from "@/lib/data";
 import { RoutineEditor } from "@/components/RoutineEditor";
 import { saveRoutineAction } from "./actions";
 
@@ -13,7 +13,10 @@ export default async function RoutineEditPage({
   const student = await getStudentById(id);
   if (!student) notFound();
 
-  const activeRoutine = await getActiveRoutine(id);
+  const [activeRoutine, libraryExercises] = await Promise.all([
+    getActiveRoutine(id),
+    getExerciseTemplates(),
+  ]);
 
   const initialDays = (activeRoutine?.days ?? []).map((day) => ({
     label: day.label,
@@ -55,6 +58,7 @@ export default async function RoutineEditPage({
       <RoutineEditor
         initialTitle={activeRoutine?.title ?? ""}
         initialDays={initialDays}
+        libraryExercises={libraryExercises}
         onSave={boundSave}
       />
     </div>

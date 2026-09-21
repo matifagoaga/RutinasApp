@@ -135,3 +135,20 @@ model Payment {
 
   @@index([studentId])
 }
+
+// Ejercicios reutilizables: el entrenador los carga una vez y los inserta
+// en cualquier rutina sin volver a tipear/subir todo de cero. Insertar una
+// copia en una rutina no crea ninguna relación con este modelo — cada
+// Exercise queda independiente, igual que hoy.
+model ExerciseTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  sets        Int      @default(3)
+  reps        String   @default("10-12")
+  weight      String?
+  restSeconds Int?
+  notes       String?
+  videoUrl    String?
+  imageData   String?
+  createdAt   DateTime @default(now())
+}

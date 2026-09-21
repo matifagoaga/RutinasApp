@@ -299,3 +299,59 @@ export function registerPayment(
     },
   });
 }
+
+// ---------- Biblioteca de ejercicios ----------
+
+export type ExerciseTemplateInput = {
+  name: string;
+  sets: number;
+  reps: string;
+  weight?: string | null;
+  restSeconds?: number | null;
+  notes?: string | null;
+  videoUrl?: string | null;
+  imageData?: string | null;
+};
+
+export function getExerciseTemplates() {
+  return db.exerciseTemplate.findMany({ orderBy: { name: "asc" } });
+}
+
+export function getExerciseTemplateById(id: string) {
+  return db.exerciseTemplate.findUnique({ where: { id } });
+}
+
+export function createExerciseTemplate(input: ExerciseTemplateInput) {
+  return db.exerciseTemplate.create({
+    data: {
+      name: input.name,
+      sets: input.sets,
+      reps: input.reps,
+      weight: input.weight || null,
+      restSeconds: input.restSeconds ?? null,
+      notes: input.notes || null,
+      videoUrl: input.videoUrl || null,
+      imageData: input.imageData || null,
+    },
+  });
+}
+
+export function updateExerciseTemplate(id: string, input: ExerciseTemplateInput) {
+  return db.exerciseTemplate.update({
+    where: { id },
+    data: {
+      name: input.name,
+      sets: input.sets,
+      reps: input.reps,
+      weight: input.weight || null,
+      restSeconds: input.restSeconds ?? null,
+      notes: input.notes || null,
+      videoUrl: input.videoUrl || null,
+      imageData: input.imageData || null,
+    },
+  });
+}
+
+export function deleteExerciseTemplate(id: string) {
+  return db.exerciseTemplate.delete({ where: { id } });
+}
