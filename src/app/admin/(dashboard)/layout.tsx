@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LogOut, Users, BookOpen } from "lucide-react";
+import { LogOut, BookOpen } from "lucide-react";
 import { getStudents, getTeams } from "@/lib/data";
 import { StudentSidebar } from "@/components/StudentSidebar";
 import { AtlasLogo } from "@/components/AtlasLogo";
@@ -17,13 +17,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <span className="font-heading text-lg font-bold tracking-tight text-ink">Atlas</span>
           </Link>
           <nav className="flex items-center gap-1">
-            <Link
-              href="/admin/teams"
-              className="flex items-center gap-2 rounded-button px-3 py-2 text-sm font-medium text-ink-muted hover:bg-ink/[0.04] hover:text-ink"
-            >
-              <Users className="h-4 w-4" strokeWidth={1.75} />
-              Equipos
-            </Link>
             <Link
               href="/admin/exercises"
               className="flex items-center gap-2 rounded-button px-3 py-2 text-sm font-medium text-ink-muted hover:bg-ink/[0.04] hover:text-ink"
