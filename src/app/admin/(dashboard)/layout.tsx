@@ -19,6 +19,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <nav className="flex items-center gap-0.5 sm:gap-1">
             <Link
               href="/admin/exercises"
+              aria-label="Biblioteca"
               className="flex items-center gap-1.5 rounded-button px-2 py-2 text-sm font-medium text-ink-muted hover:bg-ink/[0.04] hover:text-ink sm:gap-2 sm:px-3"
             >
               <BookOpen className="h-4 w-4 shrink-0" strokeWidth={1.75} />
@@ -26,6 +27,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </Link>
             <Link
               href="/admin/routine-templates"
+              aria-label="Plantillas"
               className="flex items-center gap-1.5 rounded-button px-2 py-2 text-sm font-medium text-ink-muted hover:bg-ink/[0.04] hover:text-ink sm:gap-2 sm:px-3"
             >
               <LayoutTemplate className="h-4 w-4 shrink-0" strokeWidth={1.75} />
@@ -34,6 +36,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <form action={logout}>
               <button
                 type="submit"
+                aria-label="Salir"
                 className="flex items-center gap-1.5 rounded-button px-2 py-2 text-sm font-medium text-ink-muted hover:bg-ink/[0.04] hover:text-ink sm:gap-2 sm:px-3"
               >
                 <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.75} />

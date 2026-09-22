@@ -188,23 +188,28 @@ export default async function StudentDetailPage({
             )}
             <form action={boundRegisterPayment} className="no-print mt-4 flex flex-wrap items-end gap-2">
               <div>
-                <label className="block text-xs text-ink-muted">Mes</label>
-                <input
-                  type="month"
-                  name="month"
-                  defaultValue={currentMonth}
-                  className="rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
-                />
+                <label className="flex flex-col gap-1 text-xs text-ink-muted">
+                  Mes
+                  <input
+                    type="month"
+                    name="month"
+                    required
+                    defaultValue={currentMonth}
+                    className="rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
+                  />
+                </label>
               </div>
               <div>
-                <label className="block text-xs text-ink-muted">Monto</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  name="amount"
-                  placeholder="Opcional"
-                  className="w-24 rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
-                />
+                <label className="flex flex-col gap-1 text-xs text-ink-muted">
+                  Monto
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="amount"
+                    placeholder="Opcional"
+                    className="w-24 rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
+                  />
+                </label>
               </div>
               <button
                 type="submit"
@@ -242,21 +247,25 @@ export default async function StudentDetailPage({
           )}
           <form action={boundLogMetric} className="no-print mt-4 flex flex-wrap items-end gap-2">
             <div>
-              <label className="block text-xs text-ink-muted">Peso (kg)</label>
-              <input
-                type="number"
-                step="0.1"
-                name="weightKg"
-                className="w-24 rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
-              />
+              <label className="flex flex-col gap-1 text-xs text-ink-muted">
+                Peso (kg)
+                <input
+                  type="number"
+                  step="0.1"
+                  name="weightKg"
+                  className="w-24 rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
+                />
+              </label>
             </div>
             <div className="min-w-[140px] flex-1">
-              <label className="block text-xs text-ink-muted">Notas</label>
-              <input
-                type="text"
-                name="notes"
-                className="w-full rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
-              />
+              <label className="flex flex-col gap-1 text-xs text-ink-muted">
+                Notas
+                <input
+                  type="text"
+                  name="notes"
+                  className="w-full rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
+                />
+              </label>
             </div>
             <button
               type="submit"

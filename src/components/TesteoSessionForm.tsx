@@ -98,23 +98,27 @@ export function TesteoSessionForm({
 
       <div className="flex flex-wrap items-end gap-2">
         <div>
-          <label className="block text-xs text-ink-muted">Fecha</label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
-          />
+          <label className="flex flex-col gap-1 text-xs text-ink-muted">
+            Fecha
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
+            />
+          </label>
         </div>
         <div className="min-w-[160px] flex-1">
-          <label className="block text-xs text-ink-muted">Sesión (opcional)</label>
-          <input
-            type="text"
-            value={sessionLabel}
-            onChange={(e) => setSessionLabel(e.target.value)}
-            placeholder="Ej: Inicio de año"
-            className="w-full rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
-          />
+          <label className="flex flex-col gap-1 text-xs text-ink-muted">
+            Sesión (opcional)
+            <input
+              type="text"
+              value={sessionLabel}
+              onChange={(e) => setSessionLabel(e.target.value)}
+              placeholder="Ej: Inicio de año"
+              className="w-full rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
+            />
+          </label>
         </div>
       </div>
 
@@ -127,6 +131,7 @@ export function TesteoSessionForm({
               onChange={(e) => updateEntry(index, { name: e.target.value })}
               list="testeo-names"
               placeholder="Ej: Sprint 40m"
+              aria-label={`Nombre del test ${index + 1}`}
               autoComplete="off"
               className="min-w-0 flex-1 rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
             />
@@ -135,11 +140,13 @@ export function TesteoSessionForm({
               value={entry.value}
               onChange={(e) => updateEntry(index, { value: e.target.value })}
               placeholder="Valor"
+              aria-label={`Valor del test ${index + 1}`}
               className="w-24 shrink-0 rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
             />
             <button
               type="button"
               onClick={() => removeRow(index)}
+              aria-label={entry.name ? `Quitar test ${entry.name}` : `Quitar test ${index + 1}`}
               className="shrink-0 text-ink-muted hover:text-danger"
             >
               <X className="h-4 w-4" strokeWidth={1.75} />
@@ -157,7 +164,7 @@ export function TesteoSessionForm({
         Agregar test
       </button>
 
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
 
       <div className="flex items-center gap-3">
         <button

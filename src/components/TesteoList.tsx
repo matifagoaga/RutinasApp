@@ -129,6 +129,7 @@ function TesteoRow({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Testeo"
+            aria-label="Nombre del testeo"
             className="min-w-0 flex-1 rounded-button border border-line px-2 py-1 text-xs text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
           />
           <input
@@ -136,16 +137,18 @@ function TesteoRow({
             value={value}
             onChange={(e) => setValue(e.target.value)}
             placeholder="Valor"
+            aria-label="Valor del testeo"
             className="w-20 rounded-button border border-line px-2 py-1 text-xs text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
           />
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
+            aria-label="Fecha del testeo"
             className="rounded-button border border-line px-2 py-1 text-xs text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
           />
         </div>
-        {error && <p className="text-xs text-danger">{error}</p>}
+        {error && <p role="alert" className="text-xs text-danger">{error}</p>}
         <div className="flex items-center gap-3">
           <button
             type="button"

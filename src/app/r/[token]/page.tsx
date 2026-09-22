@@ -117,21 +117,25 @@ export default async function PublicRoutinePage({
         )}
         <form action={boundLogMetric} className="mt-3 flex flex-wrap items-end gap-2">
           <div>
-            <label className="block text-xs text-ink-muted">Peso (kg)</label>
-            <input
-              type="number"
-              step="0.1"
-              name="weightKg"
-              className="w-24 rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
-            />
+            <label className="flex flex-col gap-1 text-xs text-ink-muted">
+              Peso (kg)
+              <input
+                type="number"
+                step="0.1"
+                name="weightKg"
+                className="w-24 rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
+              />
+            </label>
           </div>
           <div className="min-w-[140px] flex-1">
-            <label className="block text-xs text-ink-muted">Notas</label>
-            <input
-              type="text"
-              name="notes"
-              className="w-full rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
-            />
+            <label className="flex flex-col gap-1 text-xs text-ink-muted">
+              Notas
+              <input
+                type="text"
+                name="notes"
+                className="w-full rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
+              />
+            </label>
           </div>
           <button
             type="submit"

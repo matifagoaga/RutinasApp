@@ -24,9 +24,14 @@ export default async function LoginPage({
             autoFocus
             required
             placeholder="Contraseña"
+            aria-label="Contraseña"
             className="w-full rounded-button border border-line bg-ivory px-3 py-2 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
           />
-          {error && <p className="text-sm text-danger">Contraseña incorrecta. Probá de nuevo.</p>}
+          {error && (
+            <p role="alert" className="text-sm text-danger">
+              Contraseña incorrecta. Probá de nuevo.
+            </p>
+          )}
           <button
             type="submit"
             className="w-full rounded-button bg-accent px-3 py-2.5 text-sm font-medium text-ivory hover:bg-accent-hover"

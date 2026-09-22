@@ -61,14 +61,16 @@ export function AttentionFlag({
       className="no-print flex flex-wrap items-end gap-2"
     >
       <div className="min-w-[220px] flex-1">
-        <label className="block text-xs text-ink-muted">¿Qué hay que ver?</label>
-        <input
-          type="text"
-          name="note"
-          autoFocus
-          placeholder="Ej: le duele el hombro, preguntar la próxima sesión"
-          className="w-full rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
-        />
+        <label className="flex flex-col gap-1 text-xs text-ink-muted">
+          ¿Qué hay que ver?
+          <input
+            type="text"
+            name="note"
+            autoFocus
+            placeholder="Ej: le duele el hombro, preguntar la próxima sesión"
+            className="w-full rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
+          />
+        </label>
       </div>
       <button
         type="submit"

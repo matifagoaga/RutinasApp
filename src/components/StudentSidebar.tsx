@@ -117,6 +117,7 @@ export function StudentSidebar({ students, teams }: { students: Person[]; teams:
           }}
           onBlur={handleInputBlur}
           placeholder="Buscar alumno o jugador..."
+          aria-label="Buscar alumno o jugador"
           autoComplete="off"
           className="w-full rounded-button border border-line py-2 pl-9 pr-8 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
         />
@@ -125,6 +126,7 @@ export function StudentSidebar({ students, teams }: { students: Person[]; teams:
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => setQuery("")}
+            aria-label="Limpiar búsqueda"
             className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink"
           >
             <X className="h-4 w-4" strokeWidth={1.75} />

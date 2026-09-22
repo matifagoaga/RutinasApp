@@ -89,6 +89,7 @@ export function ExerciseRowEditor({
         <button
           type="button"
           onClick={onRemove}
+          aria-label={exercise.name ? `Quitar ejercicio ${exercise.name}` : "Quitar ejercicio"}
           className="shrink-0 text-ink-muted hover:text-danger"
         >
           <X className="h-4 w-4" strokeWidth={1.75} />

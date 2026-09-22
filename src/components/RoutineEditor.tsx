@@ -317,8 +317,11 @@ export function RoutineEditor({
       {routineTemplates.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 rounded-card border border-line bg-ink/[0.02] px-3 py-2.5">
           <LayoutTemplate className="h-4 w-4 shrink-0 text-ink-muted" strokeWidth={1.75} />
-          <label className="text-sm text-ink-muted">Empezar desde una plantilla</label>
+          <label htmlFor="routine-template-select" className="text-sm text-ink-muted">
+            Empezar desde una plantilla
+          </label>
           <select
+            id="routine-template-select"
             value=""
             onChange={(e) => {
               if (e.target.value) applyRoutineTemplate(e.target.value);
@@ -336,14 +339,16 @@ export function RoutineEditor({
       )}
 
       <div>
-        <label className="text-sm font-medium text-ink">Título de la rutina</label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Ej: Fuerza - Fase 1"
-          className="mt-1 w-full rounded-button border border-line px-3 py-2 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
-        />
+        <label className="flex flex-col gap-1 text-sm font-medium text-ink">
+          Título de la rutina
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Ej: Fuerza - Fase 1"
+            className="w-full rounded-button border border-line px-3 py-2 text-sm font-normal text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
+          />
+        </label>
       </div>
 
       <div className="flex flex-col gap-5">
@@ -462,27 +467,29 @@ export function RoutineEditor({
         </button>
       </div>
 
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       {templateMessage && <p className="text-sm text-ink-muted">{templateMessage}</p>}
 
       {pendingTemplateDays ? (
         <div className="flex flex-wrap items-end gap-2 rounded-card border border-line p-3">
           <div className="min-w-[200px] flex-1">
-            <label className="block text-xs text-ink-muted">Nombre de la plantilla</label>
-            <input
-              type="text"
-              value={templateNameDraft}
-              onChange={(e) => setTemplateNameDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  confirmSaveAsTemplate();
-                }
-              }}
-              autoFocus
-              placeholder="Ej: Fuerza - Fase 1"
-              className="w-full rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
-            />
+            <label className="flex flex-col gap-1 text-xs text-ink-muted">
+              Nombre de la plantilla
+              <input
+                type="text"
+                value={templateNameDraft}
+                onChange={(e) => setTemplateNameDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    confirmSaveAsTemplate();
+                  }
+                }}
+                autoFocus
+                placeholder="Ej: Fuerza - Fase 1"
+                className="w-full rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
+              />
+            </label>
           </div>
           <button
             type="button"
