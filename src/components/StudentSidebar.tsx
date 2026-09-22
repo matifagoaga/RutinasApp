@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useMemo, useRef, useState } from "react";
 import { ChevronRight, Plus, Search, Users, X } from "lucide-react";
 
 type Person = { id: string; name: string };
 type Team = { id: string; name: string; players: Person[] };
+type Suggestion = { id: string; name: string; team: string | null };
 
 function getInitials(name: string) {
   return name
@@ -42,7 +43,10 @@ function PersonRow({ person, pathname }: { person: Person; pathname: string | nu
 
 export function StudentSidebar({ students, teams }: { students: Person[]; teams: Team[] }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [query, setQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const blurTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const activeTeamId = teams.find((team) =>
     team.players.some((player) => pathname?.includes(`/admin/students/${player.id}`))
@@ -67,23 +71,28 @@ export function StudentSidebar({ students, teams }: { students: Person[]; teams:
   const normalizedQuery = query.trim().toLowerCase();
   const isSearching = normalizedQuery.length > 0;
 
-  const filteredStudents = useMemo(() => {
-    if (!isSearching) return students;
-    return students.filter((student) => student.name.toLowerCase().includes(normalizedQuery));
-  }, [students, isSearching, normalizedQuery]);
+  const allPeople = useMemo<Suggestion[]>(() => {
+    const fromStudents = students.map((s) => ({ id: s.id, name: s.name, team: null as string | null }));
+    const fromTeams = teams.flatMap((team) =>
+      team.players.map((player) => ({ id: player.id, name: player.name, team: team.name }))
+    );
+    return [...fromStudents, ...fromTeams];
+  }, [students, teams]);
 
-  const filteredTeams = useMemo(() => {
-    if (!isSearching) return teams;
-    return teams
-      .map((team) => {
-        const teamMatches = team.name.toLowerCase().includes(normalizedQuery);
-        const players = teamMatches
-          ? team.players
-          : team.players.filter((player) => player.name.toLowerCase().includes(normalizedQuery));
-        return { ...team, players, matches: teamMatches || players.length > 0 };
-      })
-      .filter((team) => team.matches);
-  }, [teams, isSearching, normalizedQuery]);
+  const suggestions = useMemo(() => {
+    if (!isSearching) return [];
+    return allPeople.filter((p) => p.name.toLowerCase().includes(normalizedQuery)).slice(0, 8);
+  }, [allPeople, isSearching, normalizedQuery]);
+
+  function handleSelect(personId: string) {
+    router.push(`/admin/students/${personId}`);
+    setQuery("");
+    setShowSuggestions(false);
+  }
+
+  function handleInputBlur() {
+    blurTimeout.current = setTimeout(() => setShowSuggestions(false), 150);
+  }
 
   return (
     <nav className="flex w-full flex-col gap-6 md:w-64 md:shrink-0">
@@ -92,18 +101,52 @@ export function StudentSidebar({ students, teams }: { students: Person[]; teams:
         <input
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar alumno o equipo..."
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setShowSuggestions(true);
+          }}
+          onFocus={() => {
+            if (blurTimeout.current) clearTimeout(blurTimeout.current);
+            setShowSuggestions(true);
+          }}
+          onBlur={handleInputBlur}
+          placeholder="Buscar alumno o jugador..."
+          autoComplete="off"
           className="w-full rounded-button border border-line py-2 pl-9 pr-8 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
         />
         {query && (
           <button
             type="button"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => setQuery("")}
             className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink"
           >
             <X className="h-4 w-4" strokeWidth={1.75} />
           </button>
+        )}
+
+        {isSearching && showSuggestions && (
+          <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-card border border-line bg-ivory text-sm">
+            {suggestions.length === 0 ? (
+              <li className="px-3 py-2 text-ink-muted">Sin resultados.</li>
+            ) : (
+              suggestions.map((person) => (
+                <li key={person.id}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => handleSelect(person.id)}
+                    className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-accent-tint"
+                  >
+                    <span className="text-ink">{person.name}</span>
+                    {person.team && (
+                      <span className="shrink-0 text-xs text-ink-muted">{person.team}</span>
+                    )}
+                  </button>
+                </li>
+              ))
+            )}
+          </ul>
         )}
       </div>
 
@@ -121,13 +164,11 @@ export function StudentSidebar({ students, teams }: { students: Person[]; teams:
           </Link>
         </div>
 
-        {filteredStudents.length === 0 ? (
-          <p className="px-1 text-sm text-ink-muted">
-            {isSearching ? "Sin resultados." : "Todavía no cargaste alumnos."}
-          </p>
+        {students.length === 0 ? (
+          <p className="px-1 text-sm text-ink-muted">Todavía no cargaste alumnos.</p>
         ) : (
           <ul className="flex flex-col gap-1">
-            {filteredStudents.map((student) => (
+            {students.map((student) => (
               <PersonRow key={student.id} person={student} pathname={pathname} />
             ))}
           </ul>
@@ -148,14 +189,12 @@ export function StudentSidebar({ students, teams }: { students: Person[]; teams:
           </Link>
         </div>
 
-        {filteredTeams.length === 0 ? (
-          <p className="px-1 text-sm text-ink-muted">
-            {isSearching ? "Sin resultados." : "Todavía no cargaste equipos."}
-          </p>
+        {teams.length === 0 ? (
+          <p className="px-1 text-sm text-ink-muted">Todavía no cargaste equipos.</p>
         ) : (
           <ul className="flex flex-col gap-1">
-            {filteredTeams.map((team) => {
-              const isOpen = isSearching || expanded.has(team.id);
+            {teams.map((team) => {
+              const isOpen = expanded.has(team.id);
               return (
                 <li key={team.id}>
                   <button
