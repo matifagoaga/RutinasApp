@@ -46,14 +46,18 @@ model Team {
 
 // Prueba física libre (nombre + valor a elección del entrenador, ej.
 // "Sprint 40m" -> "5.2 seg"), para trackear el progreso de un jugador.
+// Se cargan de a tandas (una "sesión" de testeos con varios ejercicios el
+// mismo día, ej. "Inicio de año"): sessionLabel agrupa esas filas sin ser
+// una relación propia, misma idea que ExerciseTemplate con las rutinas.
 model Testeo {
-  id        String   @id @default(cuid())
-  studentId String
-  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  name      String
-  value     String
-  date      DateTime @default(now())
-  notes     String?
+  id           String   @id @default(cuid())
+  studentId    String
+  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  name         String
+  value        String
+  date         DateTime @default(now())
+  notes        String?
+  sessionLabel String?
 
   @@index([studentId])
 }

@@ -4,12 +4,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdminSession } from "@/lib/auth";
 import {
-  addTesteo,
+  addTesteoSession,
   deleteStudent,
   logBodyMetric,
   registerPayment,
   setStudentAttentionNote,
   setStudentTeam,
+  type TesteoSessionEntryInput,
 } from "@/lib/data";
 
 export async function logBodyMetricAction(studentId: string, formData: FormData) {
@@ -68,26 +69,26 @@ export async function setStudentTeamAction(studentId: string, teamId: string) {
   revalidatePath(`/admin/students/${studentId}`);
 }
 
-export async function addTesteoAction(studentId: string, formData: FormData) {
+export async function addTesteoSessionAction(
+  studentId: string,
+  date: string,
+  sessionLabel: string,
+  entries: TesteoSessionEntryInput[]
+) {
   await requireAdminSession();
 
-  const name = String(formData.get("name") ?? "").trim();
-  if (!name) throw new Error("El nombre del testeo es obligatorio");
+  const cleanEntries = entries
+    .map((e) => ({ name: e.name.trim(), value: e.value.trim() }))
+    .filter((e) => e.name && e.value);
+  if (cleanEntries.length === 0) throw new Error("Agregá al menos un test con nombre y valor");
 
-  const value = String(formData.get("value") ?? "").trim();
-  if (!value) throw new Error("El valor es obligatorio");
-
-  const dateRaw = String(formData.get("date") ?? "").trim();
-  const notes = String(formData.get("notes") ?? "").trim();
-
-  await addTesteo(studentId, {
-    name,
-    value,
+  await addTesteoSession(studentId, {
     // "YYYY-MM-DD" a secas se interpreta como medianoche UTC, lo que corre la
     // fecha al día anterior en husos horarios negativos (ej. Argentina). Le
     // agregamos el mediodía local para evitar el corrimiento.
-    date: dateRaw ? new Date(`${dateRaw}T12:00:00`) : undefined,
-    notes: notes || null,
+    date: date ? new Date(`${date}T12:00:00`) : new Date(),
+    sessionLabel: sessionLabel.trim() || null,
+    entries: cleanEntries,
   });
   revalidatePath(`/admin/students/${studentId}`);
 }

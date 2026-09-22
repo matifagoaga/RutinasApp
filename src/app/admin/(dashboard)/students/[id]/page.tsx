@@ -20,8 +20,9 @@ import { ExerciseTable } from "@/components/ExerciseTable";
 import { DeleteStudentButton } from "@/components/DeleteStudentButton";
 import { AttentionFlag } from "@/components/AttentionFlag";
 import { TeamAssignSelect } from "@/components/TeamAssignSelect";
+import { TesteoSessionForm } from "@/components/TesteoSessionForm";
 import {
-  addTesteoAction,
+  addTesteoSessionAction,
   clearAttentionNoteAction,
   deleteStudentAction,
   logBodyMetricAction,
@@ -70,7 +71,7 @@ export default async function StudentDetailPage({
 
   const boundLogMetric = logBodyMetricAction.bind(null, id);
   const boundRegisterPayment = registerPaymentAction.bind(null, id);
-  const boundAddTesteo = addTesteoAction.bind(null, id);
+  const boundAddTesteoSession = addTesteoSessionAction.bind(null, id);
   const boundDelete = deleteStudentAction.bind(null, id);
   const boundSetAttention = setAttentionNoteAction.bind(null, id);
   const boundClearAttention = clearAttentionNoteAction.bind(null, id);
@@ -177,7 +178,9 @@ export default async function StudentDetailPage({
                             <span>{formatDate(t.date)}</span>
                             <span className="text-right">
                               {t.value}
-                              {t.notes ? ` · ${t.notes}` : ""}
+                              {[t.sessionLabel, t.notes].filter(Boolean).length > 0
+                                ? ` · ${[t.sessionLabel, t.notes].filter(Boolean).join(" · ")}`
+                                : ""}
                             </span>
                           </li>
                         ))}
@@ -187,49 +190,9 @@ export default async function StudentDetailPage({
                 })}
               </div>
             )}
-            <form action={boundAddTesteo} className="no-print mt-4 flex flex-col gap-2">
-              <datalist id="testeo-names">
-                {testeoNames.map((n) => (
-                  <option key={n} value={n} />
-                ))}
-              </datalist>
-              <div className="flex flex-wrap items-end gap-2">
-                <div className="min-w-[140px] flex-1">
-                  <label className="block text-xs text-ink-muted">Testeo</label>
-                  <input
-                    type="text"
-                    name="name"
-                    list="testeo-names"
-                    placeholder="Ej: Sprint 40m"
-                    className="w-full rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-ink-muted">Valor</label>
-                  <input
-                    type="text"
-                    name="value"
-                    placeholder="Ej: 5.2 seg"
-                    className="w-28 rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-ink-muted">Fecha</label>
-                  <input
-                    type="date"
-                    name="date"
-                    defaultValue={new Date().toISOString().slice(0, 10)}
-                    className="rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
-                  />
-                </div>
-              </div>
-              <button
-                type="submit"
-                className="self-start rounded-button bg-accent px-3 py-1.5 text-sm font-medium text-ivory hover:bg-accent-hover"
-              >
-                Registrar testeo
-              </button>
-            </form>
+            <div className="mt-4">
+              <TesteoSessionForm testeoNames={testeoNames} onSave={boundAddTesteoSession} />
+            </div>
           </div>
         ) : (
           <div className="rounded-card-lg border border-line p-5">

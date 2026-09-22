@@ -78,18 +78,20 @@ export function getTesteos(studentId: string, limit = 100) {
   });
 }
 
-export function addTesteo(
+export type TesteoSessionEntryInput = { name: string; value: string };
+
+export function addTesteoSession(
   studentId: string,
-  input: { name: string; value: string; date?: Date; notes?: string | null }
+  input: { date: Date; sessionLabel?: string | null; entries: TesteoSessionEntryInput[] }
 ) {
-  return db.testeo.create({
-    data: {
+  return db.testeo.createMany({
+    data: input.entries.map((entry) => ({
       studentId,
-      name: input.name,
-      value: input.value,
-      date: input.date ?? new Date(),
-      notes: input.notes || null,
-    },
+      name: entry.name,
+      value: entry.value,
+      date: input.date,
+      sessionLabel: input.sessionLabel || null,
+    })),
   });
 }
 
