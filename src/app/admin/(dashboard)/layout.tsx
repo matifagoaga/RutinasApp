@@ -11,39 +11,39 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-screen bg-ivory text-ink">
       <header className="no-print border-b border-line bg-ivory">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          <Link href="/admin" className="flex items-center gap-2.5">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
+          <Link href="/admin" className="flex shrink-0 items-center gap-2.5">
             <AtlasLogo className="h-6 w-6 text-ink" />
             <span className="font-heading text-lg font-bold tracking-tight text-ink">Atlas</span>
           </Link>
-          <nav className="flex items-center gap-1">
+          <nav className="flex items-center gap-0.5 sm:gap-1">
             <Link
               href="/admin/exercises"
-              className="flex items-center gap-2 rounded-button px-3 py-2 text-sm font-medium text-ink-muted hover:bg-ink/[0.04] hover:text-ink"
+              className="flex items-center gap-1.5 rounded-button px-2 py-2 text-sm font-medium text-ink-muted hover:bg-ink/[0.04] hover:text-ink sm:gap-2 sm:px-3"
             >
-              <BookOpen className="h-4 w-4" strokeWidth={1.75} />
-              Biblioteca
+              <BookOpen className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+              <span className="hidden sm:inline">Biblioteca</span>
             </Link>
             <Link
               href="/admin/routine-templates"
-              className="flex items-center gap-2 rounded-button px-3 py-2 text-sm font-medium text-ink-muted hover:bg-ink/[0.04] hover:text-ink"
+              className="flex items-center gap-1.5 rounded-button px-2 py-2 text-sm font-medium text-ink-muted hover:bg-ink/[0.04] hover:text-ink sm:gap-2 sm:px-3"
             >
-              <LayoutTemplate className="h-4 w-4" strokeWidth={1.75} />
-              Plantillas
+              <LayoutTemplate className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+              <span className="hidden sm:inline">Plantillas</span>
             </Link>
             <form action={logout}>
               <button
                 type="submit"
-                className="flex items-center gap-2 rounded-button px-3 py-2 text-sm font-medium text-ink-muted hover:bg-ink/[0.04] hover:text-ink"
+                className="flex items-center gap-1.5 rounded-button px-2 py-2 text-sm font-medium text-ink-muted hover:bg-ink/[0.04] hover:text-ink sm:gap-2 sm:px-3"
               >
-                <LogOut className="h-4 w-4" strokeWidth={1.75} />
-                Salir
+                <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                <span className="hidden sm:inline">Salir</span>
               </button>
             </form>
           </nav>
         </div>
       </header>
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-10 md:flex-row">
+      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 md:flex-row">
         <StudentSidebar students={students} teams={teams} />
         <main className="min-w-0 flex-1">{children}</main>
       </div>

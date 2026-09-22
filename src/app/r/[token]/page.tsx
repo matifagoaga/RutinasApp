@@ -39,7 +39,7 @@ export default async function PublicRoutinePage({
   const boundLogMetric = logBodyMetricPublicAction.bind(null, token);
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6 sm:py-10">
+    <div className="mx-auto w-full min-w-0 max-w-2xl px-4 py-6 sm:py-10">
       <div className="flex items-start justify-between gap-4 rounded-card-lg border border-line p-6">
         <div className="flex items-start gap-3">
           <AtlasLogo className="mt-1 h-6 w-6 shrink-0 text-ink" />
