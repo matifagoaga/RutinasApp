@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 // ---------- Alumnos ----------
 
 export function getStudents() {
-  return db.student.findMany({ orderBy: { createdAt: "desc" } });
+  return db.student.findMany({ where: { teamId: null }, orderBy: { createdAt: "desc" } });
 }
 
 export function getStudentById(id: string) {
@@ -45,7 +45,10 @@ export function setStudentTeam(studentId: string, teamId: string | null) {
 export function getTeams() {
   return db.team.findMany({
     orderBy: { name: "asc" },
-    include: { _count: { select: { players: true } } },
+    include: {
+      _count: { select: { players: true } },
+      players: { orderBy: { name: "asc" }, select: { id: true, name: true } },
+    },
   });
 }
 

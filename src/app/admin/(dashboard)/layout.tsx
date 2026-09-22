@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { LogOut, Users, BookOpen } from "lucide-react";
-import { getStudents } from "@/lib/data";
+import { getStudents, getTeams } from "@/lib/data";
 import { StudentSidebar } from "@/components/StudentSidebar";
 import { AtlasLogo } from "@/components/AtlasLogo";
 import { logout } from "../login/actions";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const students = await getStudents();
+  const [students, teams] = await Promise.all([getStudents(), getTeams()]);
 
   return (
     <div className="min-h-screen bg-ivory text-ink">
@@ -44,7 +44,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </header>
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-10 md:flex-row">
-        <StudentSidebar students={students} />
+        <StudentSidebar students={students} teams={teams} />
         <main className="min-w-0 flex-1">{children}</main>
       </div>
     </div>
