@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LogOut, BookOpen } from "lucide-react";
+import { LogOut, BookOpen, LayoutTemplate } from "lucide-react";
 import { getStudents, getTeams } from "@/lib/data";
 import { StudentSidebar } from "@/components/StudentSidebar";
 import { AtlasLogo } from "@/components/AtlasLogo";
@@ -23,6 +23,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             >
               <BookOpen className="h-4 w-4" strokeWidth={1.75} />
               Biblioteca
+            </Link>
+            <Link
+              href="/admin/routine-templates"
+              className="flex items-center gap-2 rounded-button px-3 py-2 text-sm font-medium text-ink-muted hover:bg-ink/[0.04] hover:text-ink"
+            >
+              <LayoutTemplate className="h-4 w-4" strokeWidth={1.75} />
+              Plantillas
             </Link>
             <form action={logout}>
               <button

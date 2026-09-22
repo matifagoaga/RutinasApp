@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { ChevronRight, Plus, Users } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ChevronRight, Plus, Search, Users, X } from "lucide-react";
 
 type Person = { id: string; name: string };
 type Team = { id: string; name: string; players: Person[] };
@@ -42,6 +42,7 @@ function PersonRow({ person, pathname }: { person: Person; pathname: string | nu
 
 export function StudentSidebar({ students, teams }: { students: Person[]; teams: Team[] }) {
   const pathname = usePathname();
+  const [query, setQuery] = useState("");
 
   const activeTeamId = teams.find((team) =>
     team.players.some((player) => pathname?.includes(`/admin/students/${player.id}`))
@@ -63,8 +64,49 @@ export function StudentSidebar({ students, teams }: { students: Person[]; teams:
     });
   }
 
+  const normalizedQuery = query.trim().toLowerCase();
+  const isSearching = normalizedQuery.length > 0;
+
+  const filteredStudents = useMemo(() => {
+    if (!isSearching) return students;
+    return students.filter((student) => student.name.toLowerCase().includes(normalizedQuery));
+  }, [students, isSearching, normalizedQuery]);
+
+  const filteredTeams = useMemo(() => {
+    if (!isSearching) return teams;
+    return teams
+      .map((team) => {
+        const teamMatches = team.name.toLowerCase().includes(normalizedQuery);
+        const players = teamMatches
+          ? team.players
+          : team.players.filter((player) => player.name.toLowerCase().includes(normalizedQuery));
+        return { ...team, players, matches: teamMatches || players.length > 0 };
+      })
+      .filter((team) => team.matches);
+  }, [teams, isSearching, normalizedQuery]);
+
   return (
     <nav className="flex w-full flex-col gap-6 md:w-64 md:shrink-0">
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" strokeWidth={1.75} />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscar alumno o equipo..."
+          className="w-full rounded-button border border-line py-2 pl-9 pr-8 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
+        />
+        {query && (
+          <button
+            type="button"
+            onClick={() => setQuery("")}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink"
+          >
+            <X className="h-4 w-4" strokeWidth={1.75} />
+          </button>
+        )}
+      </div>
+
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between px-1 pb-1">
           <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
@@ -79,11 +121,13 @@ export function StudentSidebar({ students, teams }: { students: Person[]; teams:
           </Link>
         </div>
 
-        {students.length === 0 ? (
-          <p className="px-1 text-sm text-ink-muted">Todavía no cargaste alumnos.</p>
+        {filteredStudents.length === 0 ? (
+          <p className="px-1 text-sm text-ink-muted">
+            {isSearching ? "Sin resultados." : "Todavía no cargaste alumnos."}
+          </p>
         ) : (
           <ul className="flex flex-col gap-1">
-            {students.map((student) => (
+            {filteredStudents.map((student) => (
               <PersonRow key={student.id} person={student} pathname={pathname} />
             ))}
           </ul>
@@ -104,12 +148,14 @@ export function StudentSidebar({ students, teams }: { students: Person[]; teams:
           </Link>
         </div>
 
-        {teams.length === 0 ? (
-          <p className="px-1 text-sm text-ink-muted">Todavía no cargaste equipos.</p>
+        {filteredTeams.length === 0 ? (
+          <p className="px-1 text-sm text-ink-muted">
+            {isSearching ? "Sin resultados." : "Todavía no cargaste equipos."}
+          </p>
         ) : (
           <ul className="flex flex-col gap-1">
-            {teams.map((team) => {
-              const isOpen = expanded.has(team.id);
+            {filteredTeams.map((team) => {
+              const isOpen = isSearching || expanded.has(team.id);
               return (
                 <li key={team.id}>
                   <button

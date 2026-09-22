@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { getActiveRoutine, getExerciseTemplates, getStudentById } from "@/lib/data";
+import { getActiveRoutine, getExerciseTemplates, getRoutineTemplates, getStudentById } from "@/lib/data";
 import { RoutineEditor } from "@/components/RoutineEditor";
 import { saveRoutineAction } from "./actions";
+import { saveRoutineTemplateAction } from "@/app/admin/(dashboard)/routine-templates/actions";
 
 export default async function RoutineEditPage({
   params,
@@ -14,9 +15,10 @@ export default async function RoutineEditPage({
   const student = await getStudentById(id);
   if (!student) notFound();
 
-  const [activeRoutine, libraryExercises] = await Promise.all([
+  const [activeRoutine, libraryExercises, routineTemplates] = await Promise.all([
     getActiveRoutine(id),
     getExerciseTemplates(),
+    getRoutineTemplates(),
   ]);
 
   const initialDays = (activeRoutine?.days ?? []).map((day) => ({
@@ -60,7 +62,9 @@ export default async function RoutineEditPage({
         initialTitle={activeRoutine?.title ?? ""}
         initialDays={initialDays}
         libraryExercises={libraryExercises}
+        routineTemplates={routineTemplates}
         onSave={boundSave}
+        onSaveAsTemplate={saveRoutineTemplateAction}
       />
     </div>
   );

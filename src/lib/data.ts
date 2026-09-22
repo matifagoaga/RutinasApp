@@ -219,6 +219,65 @@ export function getRoutineHistory(studentId: string, limit = 10) {
   });
 }
 
+// ---------- Plantillas de rutina ----------
+// Rutinas completas reutilizables (sin alumno dueño). El entrenador las
+// guarda desde el editor de un alumno y las aplica a cualquier otro
+// alumno/jugador; aplicar una copia los datos, no crea ninguna relación.
+
+export function getRoutineTemplates() {
+  return db.routineTemplate.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      days: {
+        orderBy: { order: "asc" },
+        include: {
+          blocks: {
+            orderBy: { order: "asc" },
+            include: { exercises: { orderBy: { order: "asc" } } },
+          },
+        },
+      },
+    },
+  });
+}
+
+export function createRoutineTemplate(title: string, days: RoutineDayInput[]) {
+  return db.routineTemplate.create({
+    data: {
+      title,
+      days: {
+        create: days.map((day, dayIndex) => ({
+          label: day.label,
+          order: dayIndex,
+          blocks: {
+            create: day.blocks.map((block, blockIndex) => ({
+              label: block.label,
+              order: blockIndex,
+              exercises: {
+                create: block.exercises.map((exercise, exerciseIndex) => ({
+                  name: exercise.name,
+                  sets: exercise.sets,
+                  reps: exercise.reps,
+                  weight: exercise.weight || null,
+                  restSeconds: exercise.restSeconds ?? null,
+                  notes: exercise.notes || null,
+                  videoUrl: exercise.videoUrl || null,
+                  imageData: exercise.imageData || null,
+                  order: exerciseIndex,
+                })),
+              },
+            })),
+          },
+        })),
+      },
+    },
+  });
+}
+
+export function deleteRoutineTemplate(id: string) {
+  return db.routineTemplate.delete({ where: { id } });
+}
+
 // ---------- Entrenamientos (progreso) ----------
 
 export type WorkoutLogEntryInput = {

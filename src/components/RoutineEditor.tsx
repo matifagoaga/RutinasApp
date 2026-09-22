@@ -1,23 +1,17 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus } from "lucide-react";
+import { LayoutTemplate, Plus } from "lucide-react";
 import { ExerciseRowEditor } from "./ExerciseRowEditor";
 import {
+  daysFromRoutineTemplate,
   exerciseFromTemplate,
+  type BlockState,
+  type DayState,
   type ExerciseState,
   type LibraryExerciseOption,
+  type RoutineTemplateOption,
 } from "./routineTypes";
-
-type BlockState = {
-  label: string;
-  exercises: ExerciseState[];
-};
-
-type DayState = {
-  label: string;
-  blocks: BlockState[];
-};
 
 export type SavedExercise = {
   name: string;
@@ -40,7 +34,7 @@ export type SavedDay = {
   blocks: SavedBlock[];
 };
 
-export type { LibraryExerciseOption };
+export type { LibraryExerciseOption, RoutineTemplateOption };
 
 function blockLabelForIndex(index: number) {
   return `Bloque ${String.fromCharCode(65 + index)}`;
@@ -73,17 +67,25 @@ export function RoutineEditor({
   initialTitle,
   initialDays,
   libraryExercises = [],
+  routineTemplates = [],
   onSave,
+  onSaveAsTemplate,
 }: {
   initialTitle: string;
   initialDays: DayState[];
   libraryExercises?: LibraryExerciseOption[];
+  routineTemplates?: RoutineTemplateOption[];
   onSave: (title: string, days: SavedDay[]) => Promise<void>;
+  onSaveAsTemplate?: (title: string, days: SavedDay[]) => Promise<void>;
 }) {
   const [title, setTitle] = useState(initialTitle);
   const [days, setDays] = useState<DayState[]>(initialDays.length ? initialDays : [emptyDay(1)]);
   const [error, setError] = useState<string | null>(null);
+  const [templateMessage, setTemplateMessage] = useState<string | null>(null);
+  const [pendingTemplateDays, setPendingTemplateDays] = useState<SavedDay[] | null>(null);
+  const [templateNameDraft, setTemplateNameDraft] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [isSavingTemplate, startTemplateTransition] = useTransition();
 
   function updateDayLabel(dayIndex: number, label: string) {
     setDays((prev) => prev.map((day, i) => (i === dayIndex ? { ...day, label } : day)));
@@ -197,15 +199,7 @@ export function RoutineEditor({
     );
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-
-    if (!title.trim()) {
-      setError("Ponele un título a la rutina.");
-      return;
-    }
-
+  function parseDays(): SavedDay[] | null {
     const parsedDays: SavedDay[] = days
       .map((day) => ({
         label: day.label.trim() || "Día",
@@ -231,8 +225,24 @@ export function RoutineEditor({
 
     if (parsedDays.length === 0) {
       setError("Agregá al menos un ejercicio con nombre.");
+      return null;
+    }
+
+    return parsedDays;
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setTemplateMessage(null);
+
+    if (!title.trim()) {
+      setError("Ponele un título a la rutina.");
       return;
     }
+
+    const parsedDays = parseDays();
+    if (!parsedDays) return;
 
     startTransition(async () => {
       try {
@@ -241,6 +251,54 @@ export function RoutineEditor({
         setError(err instanceof Error ? err.message : "Error al guardar la rutina.");
       }
     });
+  }
+
+  function handleSaveAsTemplate() {
+    if (!onSaveAsTemplate) return;
+    setError(null);
+    setTemplateMessage(null);
+
+    const parsedDays = parseDays();
+    if (!parsedDays) return;
+
+    setPendingTemplateDays(parsedDays);
+    setTemplateNameDraft(title.trim());
+  }
+
+  function confirmSaveAsTemplate() {
+    if (!onSaveAsTemplate || !pendingTemplateDays) return;
+    const templateTitle = templateNameDraft.trim();
+    if (!templateTitle) return;
+
+    startTemplateTransition(async () => {
+      try {
+        await onSaveAsTemplate(templateTitle, pendingTemplateDays);
+        setTemplateMessage("Plantilla guardada.");
+        setPendingTemplateDays(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error al guardar la plantilla.");
+      }
+    });
+  }
+
+  function applyRoutineTemplate(templateId: string) {
+    const template = routineTemplates.find((t) => t.id === templateId);
+    if (!template) return;
+
+    const hasContent = days.some((day) =>
+      day.blocks.some((block) => block.exercises.some((ex) => ex.name.trim()))
+    );
+    if (
+      hasContent &&
+      !window.confirm("Esto reemplaza los días y ejercicios actuales del editor. ¿Continuar?")
+    ) {
+      return;
+    }
+
+    setDays(daysFromRoutineTemplate(template));
+    if (!title.trim()) setTitle(template.title);
+    setError(null);
+    setTemplateMessage(null);
   }
 
   const libraryGroups: [string, LibraryExerciseOption[]][] = [];
@@ -256,6 +314,27 @@ export function RoutineEditor({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      {routineTemplates.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-card border border-line bg-ink/[0.02] px-3 py-2.5">
+          <LayoutTemplate className="h-4 w-4 shrink-0 text-ink-muted" strokeWidth={1.75} />
+          <label className="text-sm text-ink-muted">Empezar desde una plantilla</label>
+          <select
+            value=""
+            onChange={(e) => {
+              if (e.target.value) applyRoutineTemplate(e.target.value);
+            }}
+            className="rounded-button border border-line px-2 py-1 text-sm text-ink outline-none focus:border-accent"
+          >
+            <option value="">Elegir plantilla...</option>
+            {routineTemplates.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.title} ({t.days.length} día{t.days.length === 1 ? "" : "s"})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <div>
         <label className="text-sm font-medium text-ink">Título de la rutina</label>
         <input
@@ -384,14 +463,63 @@ export function RoutineEditor({
       </div>
 
       {error && <p className="text-sm text-danger">{error}</p>}
+      {templateMessage && <p className="text-sm text-ink-muted">{templateMessage}</p>}
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="self-start rounded-button bg-accent px-5 py-2.5 text-sm font-medium text-ivory hover:bg-accent-hover disabled:opacity-60"
-      >
-        {isPending ? "Guardando..." : "Guardar rutina"}
-      </button>
+      {pendingTemplateDays ? (
+        <div className="flex flex-wrap items-end gap-2 rounded-card border border-line p-3">
+          <div className="min-w-[200px] flex-1">
+            <label className="block text-xs text-ink-muted">Nombre de la plantilla</label>
+            <input
+              type="text"
+              value={templateNameDraft}
+              onChange={(e) => setTemplateNameDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  confirmSaveAsTemplate();
+                }
+              }}
+              autoFocus
+              placeholder="Ej: Fuerza - Fase 1"
+              className="w-full rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={confirmSaveAsTemplate}
+            disabled={isSavingTemplate || !templateNameDraft.trim()}
+            className="rounded-button bg-accent px-3 py-1.5 text-sm font-medium text-ivory hover:bg-accent-hover disabled:opacity-60"
+          >
+            {isSavingTemplate ? "Guardando..." : "Guardar"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setPendingTemplateDays(null)}
+            className="text-sm text-ink-muted hover:text-ink"
+          >
+            Cancelar
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="submit"
+            disabled={isPending}
+            className="rounded-button bg-accent px-5 py-2.5 text-sm font-medium text-ivory hover:bg-accent-hover disabled:opacity-60"
+          >
+            {isPending ? "Guardando..." : "Guardar rutina"}
+          </button>
+          {onSaveAsTemplate && (
+            <button
+              type="button"
+              onClick={handleSaveAsTemplate}
+              className="rounded-button border border-line px-4 py-2.5 text-sm font-medium text-ink hover:border-accent hover:text-accent"
+            >
+              Guardar como plantilla
+            </button>
+          )}
+        </div>
+      )}
     </form>
   );
 }

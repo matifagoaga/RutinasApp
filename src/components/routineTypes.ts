@@ -9,6 +9,16 @@ export type ExerciseState = {
   imageData: string;
 };
 
+export type BlockState = {
+  label: string;
+  exercises: ExerciseState[];
+};
+
+export type DayState = {
+  label: string;
+  blocks: BlockState[];
+};
+
 export type LibraryExerciseOption = {
   id: string;
   name: string;
@@ -33,4 +43,46 @@ export function exerciseFromTemplate(template: LibraryExerciseOption): ExerciseS
     videoUrl: template.videoUrl ?? "",
     imageData: template.imageData ?? "",
   };
+}
+
+export type RoutineTemplateExerciseOption = {
+  name: string;
+  sets: number;
+  reps: string;
+  weight: string | null;
+  restSeconds: number | null;
+  notes: string | null;
+  videoUrl: string | null;
+  imageData: string | null;
+};
+
+export type RoutineTemplateOption = {
+  id: string;
+  title: string;
+  days: {
+    label: string;
+    blocks: {
+      label: string;
+      exercises: RoutineTemplateExerciseOption[];
+    }[];
+  }[];
+};
+
+export function daysFromRoutineTemplate(template: RoutineTemplateOption): DayState[] {
+  return template.days.map((day) => ({
+    label: day.label,
+    blocks: day.blocks.map((block) => ({
+      label: block.label,
+      exercises: block.exercises.map((exercise) => ({
+        name: exercise.name,
+        sets: String(exercise.sets),
+        reps: exercise.reps,
+        weight: exercise.weight ?? "",
+        restSeconds: exercise.restSeconds != null ? String(exercise.restSeconds) : "",
+        notes: exercise.notes ?? "",
+        videoUrl: exercise.videoUrl ?? "",
+        imageData: exercise.imageData ?? "",
+      })),
+    })),
+  }));
 }

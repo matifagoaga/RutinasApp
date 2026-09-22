@@ -183,3 +183,57 @@ model ExerciseTemplate {
   imageData   String?
   createdAt   DateTime @default(now())
 }
+
+// Rutina completa (días/bloques/ejercicios) reutilizable, sin dueño. El
+// entrenador la guarda una vez desde el editor de un alumno y después la
+// aplica a cualquier otro alumno/jugador para no armar todo de cero.
+// Aplicarla no crea ninguna relación con este modelo — copia los datos,
+// igual que ExerciseTemplate.
+model RoutineTemplate {
+  id        String   @id @default(cuid())
+  title     String
+  createdAt DateTime @default(now())
+
+  days RoutineTemplateDay[]
+}
+
+model RoutineTemplateDay {
+  id                String          @id @default(cuid())
+  routineTemplateId String
+  routineTemplate   RoutineTemplate @relation(fields: [routineTemplateId], references: [id], onDelete: Cascade)
+  label             String
+  order             Int             @default(0)
+
+  blocks RoutineTemplateBlock[]
+
+  @@index([routineTemplateId])
+}
+
+model RoutineTemplateBlock {
+  id     String             @id @default(cuid())
+  dayId  String
+  day    RoutineTemplateDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  label  String             @default("")
+  order  Int                @default(0)
+
+  exercises RoutineTemplateExercise[]
+
+  @@index([dayId])
+}
+
+model RoutineTemplateExercise {
+  id          String               @id @default(cuid())
+  blockId     String
+  block       RoutineTemplateBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  order       Int                  @default(0)
+  name        String
+  sets        Int
+  reps        String
+  weight      String?
+  restSeconds Int?
+  notes       String?
+  videoUrl    String?
+  imageData   String?
+
+  @@index([blockId])
+}
