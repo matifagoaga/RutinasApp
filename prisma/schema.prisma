@@ -11,21 +11,21 @@ datasource db {
 }
 
 model Student {
-  id        String   @id @default(cuid())
-  name      String
-  email     String?
-  phone     String?
-  notes     String?
-  token     String   @unique @default(cuid())
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
+  id            String   @id @default(cuid())
+  name          String
+  email         String?
+  phone         String?
+  notes         String?
+  token         String   @unique @default(cuid())
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
   // Nota manual del entrenador ("marcar para seguimiento"). No nulo = está
   // marcado y aparece en "Necesitan atención" del panel de inicio.
   attentionNote String?
   // Si pertenece a un equipo, es un "jugador": misma ficha que un alumno,
   // pero con Testeos en vez de Pagos (eso lo maneja el club).
-  teamId String?
-  team   Team?   @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  teamId        String?
+  team          Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
 
   routines    Routine[]
   workoutLogs WorkoutLog[]
@@ -39,7 +39,7 @@ model Student {
 model Team {
   id        String   @id @default(cuid())
   name      String
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
 
   players Student[]
 }
@@ -55,7 +55,11 @@ model Testeo {
   student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   name         String
   value        String
-  date         DateTime @default(now())
+  // Fecha "lógica" del testeo, editable por el entrenador (puede cargarse
+  // con fecha pasada). createdAt es el momento real de carga y sólo se usa
+  // como desempate al ordenar filas con la misma date.
+  date         DateTime @default(now()) @db.Timestamptz(3)
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
   notes        String?
   sessionLabel String?
 
@@ -68,7 +72,7 @@ model Routine {
   student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   title     String
   isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
 
   days RoutineDay[]
 
@@ -89,13 +93,13 @@ model RoutineDay {
 }
 
 model ExerciseBlock {
-  id     String     @id @default(cuid())
-  dayId  String
-  day    RoutineDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  id    String     @id @default(cuid())
+  dayId String
+  day   RoutineDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
   // Nombre opcional (ej. "Bloque A"). Vacío = un solo ejercicio/bloque simple,
   // sin necesidad de mostrar el concepto de "bloque" al entrenador.
-  label  String     @default("")
-  order  Int        @default(0)
+  label String     @default("")
+  order Int        @default(0)
 
   exercises Exercise[]
 
@@ -103,29 +107,29 @@ model ExerciseBlock {
 }
 
 model Exercise {
-  id           String  @id @default(cuid())
-  blockId      String
-  block        ExerciseBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
-  order        Int     @default(0)
-  name         String
-  sets         Int
-  reps         String
-  weight       String?
-  restSeconds  Int?
-  notes        String?
-  videoUrl     String?
-  imageData    String?
+  id          String        @id @default(cuid())
+  blockId     String
+  block       ExerciseBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  order       Int           @default(0)
+  name        String
+  sets        Int
+  reps        String
+  weight      String?
+  restSeconds Int?
+  notes       String?
+  videoUrl    String?
+  imageData   String?
 
   @@index([blockId])
 }
 
 model WorkoutLog {
-  id           String     @id @default(cuid())
+  id           String      @id @default(cuid())
   studentId    String
-  student      Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student      Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
   routineDayId String?
   routineDay   RoutineDay? @relation(fields: [routineDayId], references: [id], onDelete: SetNull)
-  date         DateTime   @default(now())
+  date         DateTime    @default(now()) @db.Timestamptz(3)
   feeling      String?
 
   entries WorkoutLogEntry[]
@@ -134,13 +138,13 @@ model WorkoutLog {
 }
 
 model WorkoutLogEntry {
-  id             String     @id @default(cuid())
-  workoutLogId   String
-  workoutLog     WorkoutLog @relation(fields: [workoutLogId], references: [id], onDelete: Cascade)
-  exerciseName   String
-  setsCompleted  Int?
-  repsActual     String?
-  weightActual   String?
+  id            String     @id @default(cuid())
+  workoutLogId  String
+  workoutLog    WorkoutLog @relation(fields: [workoutLogId], references: [id], onDelete: Cascade)
+  exerciseName  String
+  setsCompleted Int?
+  repsActual    String?
+  weightActual  String?
 
   @@index([workoutLogId])
 }
@@ -149,7 +153,7 @@ model BodyMetric {
   id        String   @id @default(cuid())
   studentId String
   student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  date      DateTime @default(now())
+  date      DateTime @default(now()) @db.Timestamptz(3)
   weightKg  Float?
   notes     String?
 
@@ -164,7 +168,7 @@ model Payment {
   month     String
   amount    Float?
   notes     String?
-  paidAt    DateTime @default(now())
+  paidAt    DateTime @default(now()) @db.Timestamptz(3)
 
   @@index([studentId])
 }
@@ -185,7 +189,7 @@ model ExerciseTemplate {
   notes       String?
   videoUrl    String?
   imageData   String?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
 }
 
 // Rutina completa (días/bloques/ejercicios) reutilizable, sin dueño. El
@@ -196,7 +200,7 @@ model ExerciseTemplate {
 model RoutineTemplate {
   id        String   @id @default(cuid())
   title     String
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
 
   days RoutineTemplateDay[]
 }
@@ -214,11 +218,11 @@ model RoutineTemplateDay {
 }
 
 model RoutineTemplateBlock {
-  id     String             @id @default(cuid())
-  dayId  String
-  day    RoutineTemplateDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
-  label  String             @default("")
-  order  Int                @default(0)
+  id    String             @id @default(cuid())
+  dayId String
+  day   RoutineTemplateDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  label String             @default("")
+  order Int                @default(0)
 
   exercises RoutineTemplateExercise[]
 

@@ -3,13 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdminSession } from "@/lib/auth";
+import { parseLocalDateInput } from "@/lib/format";
 import {
   addTesteoSession,
   deleteStudent,
+  deleteTesteo,
   logBodyMetric,
   registerPayment,
   setStudentAttentionNote,
   setStudentTeam,
+  updateTesteo,
   type TesteoSessionEntryInput,
 } from "@/lib/data";
 
@@ -83,13 +86,32 @@ export async function addTesteoSessionAction(
   if (cleanEntries.length === 0) throw new Error("Agregá al menos un test con nombre y valor");
 
   await addTesteoSession(studentId, {
-    // "YYYY-MM-DD" a secas se interpreta como medianoche UTC, lo que corre la
-    // fecha al día anterior en husos horarios negativos (ej. Argentina). Le
-    // agregamos el mediodía local para evitar el corrimiento.
-    date: date ? new Date(`${date}T12:00:00`) : new Date(),
+    date: parseLocalDateInput(date),
     sessionLabel: sessionLabel.trim() || null,
     entries: cleanEntries,
   });
+  revalidatePath(`/admin/students/${studentId}`);
+}
+
+export async function updateTesteoAction(
+  studentId: string,
+  testeoId: string,
+  input: { name: string; value: string; date: string }
+) {
+  await requireAdminSession();
+
+  const name = input.name.trim();
+  const value = input.value.trim();
+  if (!name) throw new Error("El nombre del testeo es obligatorio");
+  if (!value) throw new Error("El valor es obligatorio");
+
+  await updateTesteo(testeoId, { name, value, date: parseLocalDateInput(input.date) });
+  revalidatePath(`/admin/students/${studentId}`);
+}
+
+export async function deleteTesteoAction(studentId: string, testeoId: string) {
+  await requireAdminSession();
+  await deleteTesteo(testeoId);
   revalidatePath(`/admin/students/${studentId}`);
 }
 

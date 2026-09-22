@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { localWeekday, startOfLocalDay } from "@/lib/format";
 
 // ---------- Alumnos ----------
 
@@ -73,7 +74,10 @@ export function deleteTeam(id: string) {
 export function getTesteos(studentId: string, limit = 100) {
   return db.testeo.findMany({
     where: { studentId },
-    orderBy: { date: "desc" },
+    // date es la fecha "lógica" (editable); createdAt e id desempatan cuando
+    // dos testeos comparten la misma date, para que el orden en el sparkline
+    // no dependa del orden no determinístico que devuelve la base.
+    orderBy: [{ date: "desc" }, { createdAt: "desc" }, { id: "desc" }],
     take: limit,
   });
 }
@@ -92,6 +96,16 @@ export function addTesteoSession(
       date: input.date,
       sessionLabel: input.sessionLabel || null,
     })),
+  });
+}
+
+export function updateTesteo(
+  id: string,
+  input: { name: string; value: string; date: Date }
+) {
+  return db.testeo.update({
+    where: { id },
+    data: { name: input.name, value: input.value, date: input.date },
   });
 }
 
@@ -346,9 +360,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const ATTENTION_THRESHOLD_DAYS = 7;
 
 export async function getDashboardStats() {
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfWeek = new Date(startOfToday.getTime() - startOfToday.getDay() * DAY_MS);
+  const startOfToday = startOfLocalDay(new Date());
+  const startOfWeek = new Date(startOfToday.getTime() - localWeekday(startOfToday) * DAY_MS);
 
   const [totalStudents, workoutsToday, workoutsThisWeek] = await Promise.all([
     db.student.count({ where: { active: true } }),

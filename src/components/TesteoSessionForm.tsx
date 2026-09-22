@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Plus, X } from "lucide-react";
+import { toDateInputValue } from "@/lib/format";
 
 type EntryState = { name: string; value: string };
 
@@ -10,7 +11,7 @@ function emptyEntry(): EntryState {
 }
 
 function todayIso() {
-  return new Date().toISOString().slice(0, 10);
+  return toDateInputValue(new Date());
 }
 
 export function TesteoSessionForm({

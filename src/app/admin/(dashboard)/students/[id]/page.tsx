@@ -21,14 +21,17 @@ import { DeleteStudentButton } from "@/components/DeleteStudentButton";
 import { AttentionFlag } from "@/components/AttentionFlag";
 import { TeamAssignSelect } from "@/components/TeamAssignSelect";
 import { TesteoSessionForm } from "@/components/TesteoSessionForm";
+import { TesteoList } from "@/components/TesteoList";
 import {
   addTesteoSessionAction,
   clearAttentionNoteAction,
   deleteStudentAction,
+  deleteTesteoAction,
   logBodyMetricAction,
   registerPaymentAction,
   setAttentionNoteAction,
   setStudentTeamAction,
+  updateTesteoAction,
 } from "./actions";
 
 export default async function StudentDetailPage({
@@ -63,15 +66,11 @@ export default async function StudentDetailPage({
   const currentMonth = getCurrentMonthKey();
   const paidCurrentMonth = payments.some((p) => p.month === currentMonth);
 
-  const testeoGroups = new Map<string, typeof testeos>();
-  for (const t of testeos) {
-    if (!testeoGroups.has(t.name)) testeoGroups.set(t.name, []);
-    testeoGroups.get(t.name)!.push(t);
-  }
-
   const boundLogMetric = logBodyMetricAction.bind(null, id);
   const boundRegisterPayment = registerPaymentAction.bind(null, id);
   const boundAddTesteoSession = addTesteoSessionAction.bind(null, id);
+  const boundUpdateTesteo = updateTesteoAction.bind(null, id);
+  const boundDeleteTesteo = deleteTesteoAction.bind(null, id);
   const boundDelete = deleteStudentAction.bind(null, id);
   const boundSetAttention = setAttentionNoteAction.bind(null, id);
   const boundClearAttention = clearAttentionNoteAction.bind(null, id);
@@ -153,43 +152,7 @@ export default async function StudentDetailPage({
             <h2 className="flex items-center gap-2 font-heading text-lg font-semibold text-ink">
               <FlaskConical className="h-5 w-5 text-ink-muted" strokeWidth={1.75} /> Testeos
             </h2>
-            {testeoGroups.size === 0 ? (
-              <p className="mt-2 text-sm text-ink-muted">Todavía no hay testeos registrados.</p>
-            ) : (
-              <div className="mt-3 flex flex-col gap-4">
-                {[...testeoGroups.entries()].map(([name, entries]) => {
-                  const points = [...entries]
-                    .reverse()
-                    .map((t) => parseFloat(t.value))
-                    .filter((v) => !Number.isNaN(v));
-                  return (
-                    <div key={name}>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                        {name}
-                      </p>
-                      {points.length >= 2 && (
-                        <div className="mt-1">
-                          <Sparkline points={points} />
-                        </div>
-                      )}
-                      <ul className="mt-1 flex flex-col gap-1 text-sm text-ink-muted">
-                        {entries.slice(0, 4).map((t) => (
-                          <li key={t.id} className="flex justify-between gap-2">
-                            <span>{formatDate(t.date)}</span>
-                            <span className="text-right">
-                              {t.value}
-                              {[t.sessionLabel, t.notes].filter(Boolean).length > 0
-                                ? ` · ${[t.sessionLabel, t.notes].filter(Boolean).join(" · ")}`
-                                : ""}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            <TesteoList testeos={testeos} onUpdate={boundUpdateTesteo} onDelete={boundDeleteTesteo} />
             <div className="mt-4">
               <TesteoSessionForm testeoNames={testeoNames} onSave={boundAddTesteoSession} />
             </div>
