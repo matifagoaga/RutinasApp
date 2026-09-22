@@ -1,3 +1,5 @@
+import { PlayCircle } from "lucide-react";
+
 export type ExerciseRow = {
   id: string;
   name: string;
@@ -12,22 +14,22 @@ export type ExerciseRow = {
 
 export function ExerciseTable({ exercises }: { exercises: ExerciseRow[] }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
+    <div className="overflow-x-auto rounded-card border border-line">
       <table className="w-full min-w-[560px] text-sm">
         <thead>
-          <tr className="bg-emerald-50 text-left text-xs font-semibold uppercase tracking-wide text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300">
-            <th className="px-3 py-2.5">Ejercicio</th>
-            <th className="px-3 py-2.5 text-center">Series</th>
-            <th className="px-3 py-2.5 text-center">Reps</th>
-            <th className="px-3 py-2.5 text-center">Peso</th>
-            <th className="px-3 py-2.5 text-center">Descanso</th>
-            <th className="px-3 py-2.5">Notas</th>
+          <tr className="border-b border-line text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            <th className="px-4 py-3">Ejercicio</th>
+            <th className="px-4 py-3 text-center">Series</th>
+            <th className="px-4 py-3 text-center">Reps</th>
+            <th className="px-4 py-3 text-center">Peso</th>
+            <th className="px-4 py-3 text-center">Descanso</th>
+            <th className="px-4 py-3">Notas</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-zinc-100 bg-white dark:divide-zinc-800 dark:bg-zinc-950">
+        <tbody className="divide-y divide-line">
           {exercises.map((exercise) => (
             <tr key={exercise.id}>
-              <td className="px-3 py-2.5 font-medium text-zinc-900 dark:text-zinc-50">
+              <td className="px-4 py-3 font-medium text-ink">
                 <div className="flex flex-wrap items-center gap-2">
                   {exercise.imageData && (
                     <a
@@ -40,7 +42,7 @@ export function ExerciseTable({ exercises }: { exercises: ExerciseRow[] }) {
                       <img
                         src={exercise.imageData}
                         alt={exercise.name}
-                        className="h-10 w-10 rounded-lg border border-zinc-200 object-cover dark:border-zinc-800"
+                        className="h-10 w-10 rounded-button border border-line object-cover"
                       />
                     </a>
                   )}
@@ -50,22 +52,21 @@ export function ExerciseTable({ exercises }: { exercises: ExerciseRow[] }) {
                       href={exercise.videoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="no-print inline-flex items-center gap-1 text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400"
+                      className="no-print inline-flex items-center gap-1 text-xs font-medium text-ink-muted hover:text-ink hover:underline"
                     >
-                      ▶ video
+                      <PlayCircle className="h-3.5 w-3.5" strokeWidth={1.75} />
+                      video
                     </a>
                   )}
                 </div>
               </td>
-              <td className="px-3 py-2.5 text-center text-zinc-700 dark:text-zinc-300">{exercise.sets}</td>
-              <td className="px-3 py-2.5 text-center text-zinc-700 dark:text-zinc-300">{exercise.reps}</td>
-              <td className="px-3 py-2.5 text-center text-zinc-700 dark:text-zinc-300">
-                {exercise.weight || "—"}
-              </td>
-              <td className="px-3 py-2.5 text-center text-zinc-700 dark:text-zinc-300">
+              <td className="px-4 py-3 text-center text-ink">{exercise.sets}</td>
+              <td className="px-4 py-3 text-center text-ink">{exercise.reps}</td>
+              <td className="px-4 py-3 text-center text-ink">{exercise.weight || "—"}</td>
+              <td className="px-4 py-3 text-center text-ink">
                 {exercise.restSeconds != null ? `${exercise.restSeconds}s` : "—"}
               </td>
-              <td className="px-3 py-2.5 text-zinc-500 dark:text-zinc-400">{exercise.notes || "—"}</td>
+              <td className="px-4 py-3 text-ink-muted">{exercise.notes || "—"}</td>
             </tr>
           ))}
         </tbody>

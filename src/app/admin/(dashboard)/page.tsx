@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AlertTriangle, CalendarDays, Plus } from "lucide-react";
 import {
   getDashboardStats,
   getRecentActivity,
@@ -19,52 +20,47 @@ export default async function AdminDashboard() {
   ]);
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-10">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Panel de inicio</h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <h1 className="font-heading text-2xl font-bold text-ink">Panel de inicio</h1>
+        <p className="mt-1 text-sm text-ink-muted">
           Resumen general. Elegí un alumno de la izquierda para ver el detalle.
         </p>
       </div>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm dark:border-emerald-950 dark:bg-zinc-950">
-          <p className="text-sm text-zinc-500">Alumnos activos</p>
-          <p className="mt-1 text-3xl font-semibold text-emerald-800 dark:text-emerald-400">
-            {stats.totalStudents}
-          </p>
+        <div className="rounded-card border border-line p-6">
+          <p className="text-sm text-ink-muted">Alumnos activos</p>
+          <p className="mt-2 font-heading text-3xl font-bold text-ink">{stats.totalStudents}</p>
         </div>
-        <div className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm dark:border-emerald-950 dark:bg-zinc-950">
-          <p className="text-sm text-zinc-500">Entrenamientos hoy</p>
-          <p className="mt-1 text-3xl font-semibold text-emerald-800 dark:text-emerald-400">
-            {stats.workoutsToday}
-          </p>
+        <div className="rounded-card border border-line p-6">
+          <p className="text-sm text-ink-muted">Entrenamientos hoy</p>
+          <p className="mt-2 font-heading text-3xl font-bold text-ink">{stats.workoutsToday}</p>
         </div>
-        <div className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm dark:border-emerald-950 dark:bg-zinc-950">
-          <p className="text-sm text-zinc-500">Entrenamientos esta semana</p>
-          <p className="mt-1 text-3xl font-semibold text-emerald-800 dark:text-emerald-400">
-            {stats.workoutsThisWeek}
-          </p>
+        <div className="rounded-card border border-line p-6">
+          <p className="text-sm text-ink-muted">Entrenamientos esta semana</p>
+          <p className="mt-2 font-heading text-3xl font-bold text-ink">{stats.workoutsThisWeek}</p>
         </div>
       </section>
 
       <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="rounded-2xl border border-amber-100 bg-white p-5 shadow-sm dark:border-amber-950 dark:bg-zinc-950">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            <span>⚠️</span> Necesitan atención
+        <div className="rounded-card border border-line p-6">
+          <h2 className="flex items-center gap-2 font-heading text-lg font-bold text-ink">
+            <AlertTriangle className="h-4.5 w-4.5 text-accent" strokeWidth={1.75} />
+            Necesitan atención
           </h2>
           {attention.length === 0 ? (
-            <p className="mt-2 text-sm text-zinc-500">Todos tus alumnos están al día. 👏</p>
+            <p className="mt-3 text-sm text-ink-muted">Todos tus alumnos están al día.</p>
           ) : (
-            <ul className="mt-3 flex flex-col gap-2 text-sm">
+            <ul className="mt-4 flex flex-col gap-2 text-sm">
               {attention.map((student) => (
                 <li key={student.id}>
                   <Link
                     href={`/admin/students/${student.id}`}
-                    className="flex items-center justify-between rounded-lg border border-amber-100 bg-amber-50/50 px-3 py-2 hover:border-amber-300 dark:border-amber-950 dark:bg-amber-500/5"
+                    className="flex items-center justify-between rounded-button border border-accent/25 bg-accent-tint px-3 py-2.5 hover:border-accent/50"
                   >
-                    <span className="font-medium text-zinc-900 dark:text-zinc-50">{student.name}</span>
-                    <span className="text-xs text-amber-700 dark:text-amber-400">{student.reason}</span>
+                    <span className="font-medium text-ink">{student.name}</span>
+                    <span className="text-xs text-accent">{student.reason}</span>
                   </Link>
                 </li>
               ))}
@@ -72,22 +68,23 @@ export default async function AdminDashboard() {
           )}
         </div>
 
-        <div className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm dark:border-emerald-950 dark:bg-zinc-950">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            <span>📅</span> Actividad reciente
+        <div className="rounded-card border border-line p-6">
+          <h2 className="flex items-center gap-2 font-heading text-lg font-bold text-ink">
+            <CalendarDays className="h-4.5 w-4.5 text-ink-muted" strokeWidth={1.75} />
+            Actividad reciente
           </h2>
           {activity.length === 0 ? (
-            <p className="mt-2 text-sm text-zinc-500">Todavía no hay entrenamientos registrados.</p>
+            <p className="mt-3 text-sm text-ink-muted">Todavía no hay entrenamientos registrados.</p>
           ) : (
-            <ul className="mt-3 flex flex-col gap-2 text-sm text-zinc-600 dark:text-zinc-300">
+            <ul className="mt-4 flex flex-col gap-2 text-sm">
               {activity.map((log) => (
                 <li key={log.id}>
                   <Link
                     href={`/admin/students/${log.studentId}`}
-                    className="flex items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 hover:border-emerald-300 dark:border-zinc-800 dark:bg-zinc-900/40"
+                    className="flex items-center justify-between rounded-button border border-line px-3 py-2.5 hover:border-ink/20"
                   >
-                    <span className="font-medium text-zinc-900 dark:text-zinc-50">{log.student.name}</span>
-                    <span className="text-right text-xs text-zinc-500">
+                    <span className="font-medium text-ink">{log.student.name}</span>
+                    <span className="text-right text-xs text-ink-muted">
                       {log.routineDay?.label ?? "Sesión libre"} · {formatDate(log.date)}
                     </span>
                   </Link>
@@ -98,9 +95,10 @@ export default async function AdminDashboard() {
         </div>
       </section>
 
-      <section className="max-w-lg rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm dark:border-emerald-950 dark:bg-zinc-950">
-        <h2 className="flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-          <span>➕</span> Agregar alumno
+      <section className="max-w-lg rounded-card border border-line p-6">
+        <h2 className="flex items-center gap-2 font-heading text-lg font-bold text-ink">
+          <Plus className="h-4.5 w-4.5 text-ink-muted" strokeWidth={1.75} />
+          Agregar alumno
         </h2>
         <form action={createStudentAction} className="mt-4 flex flex-col gap-3">
           <input
@@ -108,25 +106,25 @@ export default async function AdminDashboard() {
             name="name"
             required
             placeholder="Nombre y apellido"
-            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+            className="w-full rounded-button border border-line px-3 py-2 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
           />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <input
               type="email"
               name="email"
               placeholder="Email (opcional)"
-              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+              className="w-full rounded-button border border-line px-3 py-2 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
             />
             <input
               type="tel"
               name="phone"
               placeholder="Teléfono (opcional)"
-              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+              className="w-full rounded-button border border-line px-3 py-2 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
             />
           </div>
           <button
             type="submit"
-            className="self-start rounded-lg bg-emerald-800 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700"
+            className="self-start rounded-button bg-accent px-4 py-2 text-sm font-medium text-ivory hover:bg-accent-hover"
           >
             Agregar alumno
           </button>

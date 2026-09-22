@@ -8,25 +8,16 @@ export function Sparkline({ points }: { points: number[] }) {
   const range = max - min || 1;
   const step = width / (points.length - 1);
 
-  const coords = points.map((point, index) => {
-    const x = index * step;
-    const y = height - ((point - min) / range) * height;
-    return { x, y };
-  });
-
-  const linePoints = coords.map((c) => `${c.x},${c.y}`).join(" ");
-  const areaPoints = `0,${height} ${linePoints} ${width},${height}`;
-  const gradientId = "sparkline-fill";
+  const linePoints = points
+    .map((point, index) => {
+      const x = index * step;
+      const y = height - ((point - min) / range) * height;
+      return `${x},${y}`;
+    })
+    .join(" ");
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="h-14 w-full max-w-xs text-emerald-700 dark:text-emerald-400">
-      <defs>
-        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="currentColor" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polygon points={areaPoints} fill={`url(#${gradientId})`} stroke="none" />
+    <svg viewBox={`0 0 ${width} ${height}`} className="h-14 w-full max-w-xs text-accent">
       <polyline
         points={linePoints}
         fill="none"

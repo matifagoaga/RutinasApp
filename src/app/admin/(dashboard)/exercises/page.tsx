@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BookOpen, Plus } from "lucide-react";
 import { getExerciseTemplates } from "@/lib/data";
 import { ExerciseTemplateForm } from "@/components/ExerciseTemplateForm";
 import { DeleteTemplateButton } from "@/components/DeleteTemplateButton";
@@ -21,10 +22,10 @@ export default async function ExerciseLibraryPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-          📚 Biblioteca de ejercicios
+        <h1 className="flex items-center gap-2 font-heading text-2xl font-semibold text-ink">
+          <BookOpen className="h-6 w-6 text-ink-muted" strokeWidth={1.75} /> Biblioteca de ejercicios
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-ink-muted">
           Cargá cada ejercicio una vez y después insertalo en cualquier rutina desde el editor,
           sin volver a tipear ni subir la foto de nuevo.
         </p>
@@ -32,17 +33,17 @@ export default async function ExerciseLibraryPage() {
 
       <section className="flex flex-col gap-6">
         {templates.length === 0 ? (
-          <p className="text-sm text-zinc-500">Todavía no cargaste ningún ejercicio.</p>
+          <p className="text-sm text-ink-muted">Todavía no cargaste ningún ejercicio.</p>
         ) : (
           [...groups.entries()].map(([category, items]) => (
             <div key={category}>
-              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-ink-muted">
                 {category}
               </h2>
-              <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
+              <div className="overflow-x-auto rounded-card border border-line">
                 <table className="w-full min-w-[640px] text-sm">
                   <thead>
-                    <tr className="bg-emerald-50 text-left text-xs font-semibold uppercase tracking-wide text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300">
+                    <tr className="border-b border-line text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">
                       <th className="px-3 py-2.5">Ejercicio</th>
                       <th className="px-3 py-2.5 text-center">Series</th>
                       <th className="px-3 py-2.5 text-center">Reps</th>
@@ -50,36 +51,36 @@ export default async function ExerciseLibraryPage() {
                       <th className="px-3 py-2.5"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-100 bg-white dark:divide-zinc-800 dark:bg-zinc-950">
+                  <tbody className="divide-y divide-line">
                     {items.map((template) => (
                       <tr key={template.id}>
-                        <td className="px-3 py-2.5 font-medium text-zinc-900 dark:text-zinc-50">
+                        <td className="px-3 py-2.5 font-medium text-ink">
                           <div className="flex items-center gap-2">
                             {template.imageData && (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={template.imageData}
                                 alt={template.name}
-                                className="h-10 w-10 rounded-lg border border-zinc-200 object-cover dark:border-zinc-800"
+                                className="h-10 w-10 rounded-button border border-line object-cover"
                               />
                             )}
                             <span>{template.name}</span>
                           </div>
                         </td>
-                        <td className="px-3 py-2.5 text-center text-zinc-700 dark:text-zinc-300">
+                        <td className="px-3 py-2.5 text-center text-ink-muted">
                           {template.sets}
                         </td>
-                        <td className="px-3 py-2.5 text-center text-zinc-700 dark:text-zinc-300">
+                        <td className="px-3 py-2.5 text-center text-ink-muted">
                           {template.reps}
                         </td>
-                        <td className="px-3 py-2.5 text-center text-zinc-700 dark:text-zinc-300">
+                        <td className="px-3 py-2.5 text-center text-ink-muted">
                           {template.weight || "—"}
                         </td>
                         <td className="px-3 py-2.5">
                           <div className="flex items-center justify-end gap-3">
                             <Link
                               href={`/admin/exercises/${template.id}`}
-                              className="text-xs font-medium text-emerald-700 hover:text-emerald-900 dark:text-emerald-400"
+                              className="text-xs font-medium text-accent hover:text-accent-hover"
                             >
                               Editar
                             </Link>
@@ -99,9 +100,9 @@ export default async function ExerciseLibraryPage() {
         )}
       </section>
 
-      <section className="max-w-lg rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm dark:border-emerald-950 dark:bg-zinc-950">
-        <h2 className="flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-          <span>➕</span> Agregar ejercicio a la biblioteca
+      <section className="max-w-lg rounded-card-lg border border-line p-6">
+        <h2 className="flex items-center gap-2 font-heading text-lg font-semibold text-ink">
+          <Plus className="h-5 w-5 text-ink-muted" strokeWidth={1.75} /> Agregar ejercicio a la biblioteca
         </h2>
         <div className="mt-4">
           {/* key fuerza que el formulario se reinicie después de cada alta exitosa */}

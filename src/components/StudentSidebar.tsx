@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Plus } from "lucide-react";
 
 function getInitials(name: string) {
   return name
@@ -20,19 +21,22 @@ export function StudentSidebar({
   const pathname = usePathname();
 
   return (
-    <nav className="flex w-full flex-col gap-1 md:w-64 md:shrink-0">
-      <div className="flex items-center justify-between px-1 pb-2">
-        <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Alumnos</span>
+    <nav className="flex w-full flex-col gap-2 md:w-64 md:shrink-0">
+      <div className="flex items-center justify-between px-1 pb-1">
+        <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          Alumnos
+        </span>
         <Link
           href="/admin"
-          className="text-xs font-medium text-emerald-700 hover:text-emerald-900 dark:text-emerald-400"
+          className="flex items-center gap-1 text-xs font-medium text-accent hover:text-accent-hover"
         >
-          + Nuevo
+          <Plus className="h-3.5 w-3.5" strokeWidth={2} />
+          Nuevo
         </Link>
       </div>
 
       {students.length === 0 ? (
-        <p className="px-1 text-sm text-zinc-500">Todavía no cargaste alumnos.</p>
+        <p className="px-1 text-sm text-ink-muted">Todavía no cargaste alumnos.</p>
       ) : (
         <ul className="flex flex-col gap-1">
           {students.map((student) => {
@@ -41,15 +45,13 @@ export function StudentSidebar({
               <li key={student.id}>
                 <Link
                   href={`/admin/students/${student.id}`}
-                  className={`flex items-center gap-2 rounded-lg px-2 py-2 text-sm transition ${
-                    isActive
-                      ? "bg-emerald-800 text-white shadow-sm"
-                      : "text-zinc-700 hover:bg-emerald-50 dark:text-zinc-300 dark:hover:bg-emerald-500/10"
+                  className={`flex items-center gap-3 rounded-button px-2.5 py-2 text-sm transition ${
+                    isActive ? "bg-ink text-ivory" : "text-ink hover:bg-ink/[0.04]"
                   }`}
                 >
                   <span
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
-                      isActive ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300"
+                      isActive ? "bg-ivory/15 text-ivory" : "bg-ink/[0.06] text-ink"
                     }`}
                   >
                     {getInitials(student.name)}

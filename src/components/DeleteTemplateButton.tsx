@@ -21,7 +21,7 @@ export function DeleteTemplateButton({
       type="button"
       onClick={handleClick}
       disabled={isPending}
-      className="text-xs font-medium text-red-600 hover:text-red-700 disabled:opacity-60"
+      className="text-xs font-medium text-danger hover:text-danger-hover disabled:opacity-60"
     >
       {isPending ? "..." : "Eliminar"}
     </button>

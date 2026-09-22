@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Plus } from "lucide-react";
 import { ExerciseRowEditor } from "./ExerciseRowEditor";
 import {
   exerciseFromTemplate,
@@ -256,15 +257,13 @@ export function RoutineEditor({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div>
-        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          Título de la rutina
-        </label>
+        <label className="text-sm font-medium text-ink">Título de la rutina</label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Ej: Fuerza - Fase 1"
-          className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+          className="mt-1 w-full rounded-button border border-line px-3 py-2 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
         />
       </div>
 
@@ -272,25 +271,19 @@ export function RoutineEditor({
         {days.map((day, dayIndex) => {
           const showBlockChrome = day.blocks.length > 1;
           return (
-            <div
-              key={dayIndex}
-              className="overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-sm dark:border-emerald-950 dark:bg-zinc-950"
-            >
-              <div className="flex items-center justify-between gap-3 bg-emerald-50 px-4 py-3 dark:bg-emerald-500/10">
-                <div className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-700" />
-                  <input
-                    type="text"
-                    value={day.label}
-                    onChange={(e) => updateDayLabel(dayIndex, e.target.value)}
-                    className="rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-semibold text-emerald-900 outline-none focus:border-emerald-400 dark:text-emerald-200"
-                  />
-                </div>
+            <div key={dayIndex} className="overflow-hidden rounded-card-lg border border-line">
+              <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
+                <input
+                  type="text"
+                  value={day.label}
+                  onChange={(e) => updateDayLabel(dayIndex, e.target.value)}
+                  className="rounded-button border border-transparent bg-transparent px-2 py-1 font-heading text-sm font-semibold text-ink outline-none focus:border-accent"
+                />
                 {days.length > 1 && (
                   <button
                     type="button"
                     onClick={() => removeDay(dayIndex)}
-                    className="shrink-0 text-xs font-medium text-red-600 hover:text-red-700"
+                    className="shrink-0 text-xs font-medium text-danger hover:text-danger-hover"
                   >
                     Quitar día
                   </button>
@@ -301,11 +294,7 @@ export function RoutineEditor({
                 {day.blocks.map((block, blockIndex) => (
                   <div
                     key={blockIndex}
-                    className={
-                      showBlockChrome
-                        ? "rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/40"
-                        : ""
-                    }
+                    className={showBlockChrome ? "rounded-card border border-line p-3" : ""}
                   >
                     {showBlockChrome && (
                       <div className="mb-3 flex items-center justify-between gap-2">
@@ -314,12 +303,12 @@ export function RoutineEditor({
                           value={block.label}
                           onChange={(e) => updateBlock(dayIndex, blockIndex, { label: e.target.value })}
                           placeholder="Nombre del bloque"
-                          className="rounded-lg border border-emerald-200 bg-white px-2 py-1 text-xs font-semibold text-emerald-800 outline-none focus:border-emerald-500 dark:border-emerald-900 dark:bg-zinc-950 dark:text-emerald-300"
+                          className="rounded-button border border-line px-2 py-1 text-xs font-semibold text-ink outline-none focus:border-accent"
                         />
                         <button
                           type="button"
                           onClick={() => removeBlock(dayIndex, blockIndex)}
-                          className="shrink-0 text-xs font-medium text-red-600 hover:text-red-700"
+                          className="shrink-0 text-xs font-medium text-danger hover:text-danger-hover"
                         >
                           Quitar bloque
                         </button>
@@ -341,9 +330,10 @@ export function RoutineEditor({
                         <button
                           type="button"
                           onClick={() => addExercise(dayIndex, blockIndex)}
-                          className="self-start text-sm font-medium text-emerald-700 hover:text-emerald-900 dark:text-emerald-400"
+                          className="flex items-center gap-1.5 self-start text-sm font-medium text-accent hover:text-accent-hover"
                         >
-                          + Agregar ejercicio{showBlockChrome ? ` a ${block.label || "este bloque"}` : ""}
+                          <Plus className="h-4 w-4" strokeWidth={1.75} />
+                          Agregar ejercicio{showBlockChrome ? ` a ${block.label || "este bloque"}` : ""}
                         </button>
                         {libraryExercises.length > 0 && (
                           <select
@@ -351,7 +341,7 @@ export function RoutineEditor({
                             onChange={(e) => {
                               if (e.target.value) addExerciseFromLibrary(dayIndex, blockIndex, e.target.value);
                             }}
-                            className="rounded-lg border border-zinc-300 px-2 py-1 text-xs outline-none focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
+                            className="rounded-button border border-line px-2 py-1 text-xs text-ink outline-none focus:border-accent"
                           >
                             <option value="">+ Desde la biblioteca...</option>
                             {libraryGroups.map(([category, items]) => (
@@ -373,9 +363,10 @@ export function RoutineEditor({
                 <button
                   type="button"
                   onClick={() => addBlock(dayIndex)}
-                  className="self-start text-xs font-medium text-emerald-700 hover:text-emerald-900 dark:text-emerald-400"
+                  className="flex items-center gap-1.5 self-start text-xs font-medium text-accent hover:text-accent-hover"
                 >
-                  + Agregar bloque (ejercicios en circuito/superserie)
+                  <Plus className="h-3.5 w-3.5" strokeWidth={1.75} />
+                  Agregar bloque (ejercicios en circuito/superserie)
                 </button>
               </div>
             </div>
@@ -385,18 +376,19 @@ export function RoutineEditor({
         <button
           type="button"
           onClick={addDay}
-          className="self-start rounded-lg border border-dashed border-emerald-300 px-4 py-2 text-sm font-medium text-emerald-800 hover:border-emerald-500 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-500/10"
+          className="flex items-center gap-1.5 self-start rounded-button border border-dashed border-line px-4 py-2 text-sm font-medium text-ink hover:border-accent hover:text-accent"
         >
-          + Agregar día
+          <Plus className="h-4 w-4" strokeWidth={1.75} />
+          Agregar día
         </button>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       <button
         type="submit"
         disabled={isPending}
-        className="self-start rounded-lg bg-emerald-800 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60"
+        className="self-start rounded-button bg-accent px-5 py-2.5 text-sm font-medium text-ivory hover:bg-accent-hover disabled:opacity-60"
       >
         {isPending ? "Guardando..." : "Guardar rutina"}
       </button>

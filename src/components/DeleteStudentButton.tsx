@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { Trash2 } from "lucide-react";
 
 export function DeleteStudentButton({
   studentName,
@@ -26,8 +27,9 @@ export function DeleteStudentButton({
       type="button"
       onClick={handleClick}
       disabled={isPending}
-      className="no-print rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:border-red-400 hover:bg-red-50 disabled:opacity-60 dark:border-red-900 dark:bg-zinc-950 dark:text-red-400 dark:hover:bg-red-500/10"
+      className="no-print flex items-center gap-2 rounded-button border border-line px-3 py-2 text-sm font-medium text-danger hover:border-danger/40 hover:bg-danger-tint disabled:opacity-60"
     >
+      <Trash2 className="h-4 w-4" strokeWidth={1.75} />
       {isPending ? "Eliminando..." : "Eliminar alumno"}
     </button>
   );

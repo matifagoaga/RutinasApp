@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { Plus, X } from "lucide-react";
 import { processImageFile } from "@/lib/image";
 import { exerciseFromTemplate, type ExerciseState, type LibraryExerciseOption } from "./routineTypes";
 
@@ -46,7 +47,7 @@ export function ExerciseRowEditor({
   }
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-950">
+    <div className="rounded-card border border-line p-3">
       <div className="flex items-center gap-2">
         <div className="relative w-full">
           <input
@@ -63,21 +64,21 @@ export function ExerciseRowEditor({
             onBlur={handleNameBlur}
             placeholder="Ejercicio (ej: Sentadilla)"
             autoComplete="off"
-            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+            className="w-full rounded-button border border-line px-3 py-2 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
           />
           {showSuggestions && suggestions.length > 0 && (
-            <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-zinc-200 bg-white text-sm shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+            <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-card border border-line bg-ivory text-sm">
               {suggestions.map((template) => (
                 <li key={template.id}>
                   <button
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => pickSuggestion(template)}
-                    className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
+                    className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-accent-tint"
                   >
-                    <span className="text-zinc-900 dark:text-zinc-50">{template.name}</span>
+                    <span className="text-ink">{template.name}</span>
                     {template.category && (
-                      <span className="shrink-0 text-xs text-zinc-400">{template.category}</span>
+                      <span className="shrink-0 text-xs text-ink-muted">{template.category}</span>
                     )}
                   </button>
                 </li>
@@ -88,9 +89,9 @@ export function ExerciseRowEditor({
         <button
           type="button"
           onClick={onRemove}
-          className="shrink-0 text-sm text-zinc-400 hover:text-red-600"
+          className="shrink-0 text-ink-muted hover:text-danger"
         >
-          ✕
+          <X className="h-4 w-4" strokeWidth={1.75} />
         </button>
       </div>
       <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -100,21 +101,21 @@ export function ExerciseRowEditor({
           value={exercise.sets}
           onChange={(e) => onChange({ sets: e.target.value })}
           placeholder="Series"
-          className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+          className="rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
         />
         <input
           type="text"
           value={exercise.reps}
           onChange={(e) => onChange({ reps: e.target.value })}
           placeholder="Reps (ej 8-12)"
-          className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+          className="rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
         />
         <input
           type="text"
           value={exercise.weight}
           onChange={(e) => onChange({ weight: e.target.value })}
           placeholder="Peso sugerido"
-          className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+          className="rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
         />
         <input
           type="number"
@@ -122,7 +123,7 @@ export function ExerciseRowEditor({
           value={exercise.restSeconds}
           onChange={(e) => onChange({ restSeconds: e.target.value })}
           placeholder="Descanso (seg)"
-          className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+          className="rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
         />
       </div>
       <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -131,14 +132,14 @@ export function ExerciseRowEditor({
           value={exercise.notes}
           onChange={(e) => onChange({ notes: e.target.value })}
           placeholder="Notas (opcional)"
-          className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+          className="rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
         />
         <input
           type="text"
           value={exercise.videoUrl}
           onChange={(e) => onChange({ videoUrl: e.target.value })}
           placeholder="Link de video (opcional)"
-          className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+          className="rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
         />
       </div>
 
@@ -149,19 +150,20 @@ export function ExerciseRowEditor({
             <img
               src={exercise.imageData}
               alt=""
-              className="h-14 w-14 rounded-lg border border-zinc-200 object-cover dark:border-zinc-800"
+              className="h-14 w-14 rounded-button border border-line object-cover"
             />
             <button
               type="button"
               onClick={() => onChange({ imageData: "" })}
-              className="text-xs font-medium text-red-600 hover:text-red-700"
+              className="text-xs font-medium text-danger hover:text-danger-hover"
             >
               Quitar foto/GIF
             </button>
           </>
         ) : (
-          <label className="cursor-pointer text-xs font-medium text-emerald-700 hover:text-emerald-900 dark:text-emerald-400">
-            + Foto o GIF del ejercicio
+          <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-hover">
+            <Plus className="h-3.5 w-3.5" strokeWidth={1.75} />
+            Foto o GIF del ejercicio
             <input
               type="file"
               accept="image/*"
@@ -174,7 +176,7 @@ export function ExerciseRowEditor({
           </label>
         )}
       </div>
-      {imageError && <p className="mt-1 text-xs text-red-600">{imageError}</p>}
+      {imageError && <p className="mt-1 text-xs text-danger">{imageError}</p>}
     </div>
   );
 }

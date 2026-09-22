@@ -1,3 +1,4 @@
+import { AtlasLogo } from "@/components/AtlasLogo";
 import { login } from "./actions";
 
 export default async function LoginPage({
@@ -8,33 +9,27 @@ export default async function LoginPage({
   const { error } = await searchParams;
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-xl dark:border-emerald-950 dark:bg-zinc-950">
-        <div className="bg-emerald-900 px-8 py-6">
-          <p className="text-2xl">🏋️</p>
-          <h1 className="mt-1 text-xl font-semibold text-white">RutinasApp</h1>
-          <p className="mt-1 text-sm text-emerald-100">
-            Ingresá tu contraseña de entrenador para continuar.
-          </p>
-        </div>
+    <div className="flex min-h-screen items-center justify-center bg-ivory px-4">
+      <div className="w-full max-w-sm rounded-card-lg border border-line bg-ivory p-8">
+        <AtlasLogo className="h-8 w-8 text-ink" />
+        <h1 className="mt-4 font-heading text-xl font-bold text-ink">Atlas</h1>
+        <p className="mt-1 text-sm text-ink-muted">
+          Ingresá tu contraseña de entrenador para continuar.
+        </p>
 
-        <form action={login} className="flex flex-col gap-4 px-8 py-6">
+        <form action={login} className="mt-6 flex flex-col gap-4">
           <input
             type="password"
             name="passcode"
             autoFocus
             required
             placeholder="Contraseña"
-            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+            className="w-full rounded-button border border-line bg-ivory px-3 py-2 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
           />
-          {error && (
-            <p className="text-sm text-red-600">
-              Contraseña incorrecta. Probá de nuevo.
-            </p>
-          )}
+          {error && <p className="text-sm text-danger">Contraseña incorrecta. Probá de nuevo.</p>}
           <button
             type="submit"
-            className="w-full rounded-lg bg-emerald-800 px-3 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-emerald-700"
+            className="w-full rounded-button bg-accent px-3 py-2.5 text-sm font-medium text-ivory hover:bg-accent-hover"
           >
             Entrar
           </button>

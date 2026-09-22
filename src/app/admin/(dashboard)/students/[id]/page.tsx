@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { CalendarDays, CreditCard, Dumbbell, FlaskConical, Scale } from "lucide-react";
 import {
   getActiveRoutine,
   getBodyMetrics,
@@ -77,17 +78,17 @@ export default async function StudentDetailPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-4 border-b border-emerald-100 pb-5 dark:border-emerald-950">
+      <div className="flex flex-col gap-4 border-b border-line pb-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{student.name}</h1>
+            <h1 className="font-heading text-2xl font-semibold text-ink">{student.name}</h1>
             {(student.email || student.phone) && (
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-ink-muted">
                 {[student.email, student.phone].filter(Boolean).join(" · ")}
               </p>
             )}
             <div className="mt-2 flex items-center gap-2">
-              <label className="no-print text-xs text-zinc-500">Equipo</label>
+              <label className="no-print text-xs text-ink-muted">Equipo</label>
               <TeamAssignSelect teams={teams} currentTeamId={student.teamId} onChange={boundSetTeam} />
             </div>
           </div>
@@ -96,7 +97,7 @@ export default async function StudentDetailPage({
             <PrintButton />
             <Link
               href={`/admin/students/${id}/routine`}
-              className="no-print rounded-lg bg-emerald-800 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700"
+              className="no-print rounded-button bg-accent px-3 py-2 text-sm font-medium text-ivory hover:bg-accent-hover"
             >
               {routine ? "Editar rutina" : "Crear rutina"}
             </Link>
@@ -111,30 +112,26 @@ export default async function StudentDetailPage({
       </div>
 
       <section>
-        <h2 className="flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-          <span>🏋️</span> Rutina activa
+        <h2 className="flex items-center gap-2 font-heading text-lg font-semibold text-ink">
+          <Dumbbell className="h-5 w-5 text-ink-muted" strokeWidth={1.75} /> Rutina activa
         </h2>
         {!routine ? (
-          <p className="mt-2 text-sm text-zinc-500">Todavía no tiene una rutina cargada.</p>
+          <p className="mt-2 text-sm text-ink-muted">Todavía no tiene una rutina cargada.</p>
         ) : (
           <div className="mt-3 flex flex-col gap-5">
-            <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">{routine.title}</p>
+            <p className="text-sm font-medium text-ink-muted">{routine.title}</p>
             {routine.days.map((day) => {
               const showBlockLabel = day.blocks.length > 1;
               return (
-                <div
-                  key={day.id}
-                  className="overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-sm dark:border-emerald-950 dark:bg-zinc-950"
-                >
-                  <div className="flex items-center gap-2 bg-emerald-900 px-4 py-3 text-white">
-                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
-                    <h3 className="font-semibold">{day.label}</h3>
+                <div key={day.id} className="overflow-hidden rounded-card-lg border border-line">
+                  <div className="flex items-center gap-2 bg-ink px-4 py-3 text-ivory">
+                    <h3 className="font-heading font-semibold">{day.label}</h3>
                   </div>
                   <div className="flex flex-col gap-4 p-4">
                     {day.blocks.map((block) => (
                       <div key={block.id}>
                         {showBlockLabel && (
-                          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
                             {block.label}
                           </p>
                         )}
@@ -151,12 +148,12 @@ export default async function StudentDetailPage({
 
       <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {isPlayer ? (
-          <div className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm dark:border-emerald-950 dark:bg-zinc-950">
-            <h2 className="flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-              <span>🧪</span> Testeos
+          <div className="rounded-card-lg border border-line p-5">
+            <h2 className="flex items-center gap-2 font-heading text-lg font-semibold text-ink">
+              <FlaskConical className="h-5 w-5 text-ink-muted" strokeWidth={1.75} /> Testeos
             </h2>
             {testeoGroups.size === 0 ? (
-              <p className="mt-2 text-sm text-zinc-500">Todavía no hay testeos registrados.</p>
+              <p className="mt-2 text-sm text-ink-muted">Todavía no hay testeos registrados.</p>
             ) : (
               <div className="mt-3 flex flex-col gap-4">
                 {[...testeoGroups.entries()].map(([name, entries]) => {
@@ -166,7 +163,7 @@ export default async function StudentDetailPage({
                     .filter((v) => !Number.isNaN(v));
                   return (
                     <div key={name}>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
                         {name}
                       </p>
                       {points.length >= 2 && (
@@ -174,7 +171,7 @@ export default async function StudentDetailPage({
                           <Sparkline points={points} />
                         </div>
                       )}
-                      <ul className="mt-1 flex flex-col gap-1 text-sm text-zinc-600 dark:text-zinc-300">
+                      <ul className="mt-1 flex flex-col gap-1 text-sm text-ink-muted">
                         {entries.slice(0, 4).map((t) => (
                           <li key={t.id} className="flex justify-between gap-2">
                             <span>{formatDate(t.date)}</span>
@@ -198,62 +195,60 @@ export default async function StudentDetailPage({
               </datalist>
               <div className="flex flex-wrap items-end gap-2">
                 <div className="min-w-[140px] flex-1">
-                  <label className="block text-xs text-zinc-500">Testeo</label>
+                  <label className="block text-xs text-ink-muted">Testeo</label>
                   <input
                     type="text"
                     name="name"
                     list="testeo-names"
                     placeholder="Ej: Sprint 40m"
-                    className="w-full rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+                    className="w-full rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-zinc-500">Valor</label>
+                  <label className="block text-xs text-ink-muted">Valor</label>
                   <input
                     type="text"
                     name="value"
                     placeholder="Ej: 5.2 seg"
-                    className="w-28 rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+                    className="w-28 rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-zinc-500">Fecha</label>
+                  <label className="block text-xs text-ink-muted">Fecha</label>
                   <input
                     type="date"
                     name="date"
                     defaultValue={new Date().toISOString().slice(0, 10)}
-                    className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+                    className="rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
                   />
                 </div>
               </div>
               <button
                 type="submit"
-                className="self-start rounded-lg bg-emerald-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
+                className="self-start rounded-button bg-accent px-3 py-1.5 text-sm font-medium text-ivory hover:bg-accent-hover"
               >
                 Registrar testeo
               </button>
             </form>
           </div>
         ) : (
-          <div className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm dark:border-emerald-950 dark:bg-zinc-950">
+          <div className="rounded-card-lg border border-line p-5">
             <div className="flex items-center justify-between gap-2">
-              <h2 className="flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-                <span>💳</span> Pagos
+              <h2 className="flex items-center gap-2 font-heading text-lg font-semibold text-ink">
+                <CreditCard className="h-5 w-5 text-ink-muted" strokeWidth={1.75} /> Pagos
               </h2>
               <span
-                className={`no-print rounded-full px-2.5 py-1 text-xs font-semibold ${
-                  paidCurrentMonth
-                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300"
-                    : "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
+                className={`no-print text-xs font-semibold ${
+                  paidCurrentMonth ? "text-ink-muted" : "text-ink"
                 }`}
               >
                 {paidCurrentMonth ? "Al día" : "Pendiente"} · {formatMonthLabel(currentMonth)}
               </span>
             </div>
             {payments.length === 0 ? (
-              <p className="mt-2 text-sm text-zinc-500">Todavía no hay pagos registrados.</p>
+              <p className="mt-2 text-sm text-ink-muted">Todavía no hay pagos registrados.</p>
             ) : (
-              <ul className="mt-3 flex flex-col gap-1 text-sm text-zinc-600 dark:text-zinc-300">
+              <ul className="mt-3 flex flex-col gap-1 text-sm text-ink-muted">
                 {payments.slice(0, 6).map((p) => (
                   <li key={p.id} className="flex justify-between gap-2">
                     <span>{formatMonthLabel(p.month)}</span>
@@ -267,27 +262,27 @@ export default async function StudentDetailPage({
             )}
             <form action={boundRegisterPayment} className="no-print mt-4 flex flex-wrap items-end gap-2">
               <div>
-                <label className="block text-xs text-zinc-500">Mes</label>
+                <label className="block text-xs text-ink-muted">Mes</label>
                 <input
                   type="month"
                   name="month"
                   defaultValue={currentMonth}
-                  className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+                  className="rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
                 />
               </div>
               <div>
-                <label className="block text-xs text-zinc-500">Monto</label>
+                <label className="block text-xs text-ink-muted">Monto</label>
                 <input
                   type="number"
                   step="0.01"
                   name="amount"
                   placeholder="Opcional"
-                  className="w-24 rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+                  className="w-24 rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
                 />
               </div>
               <button
                 type="submit"
-                className="rounded-lg bg-emerald-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
+                className="rounded-button bg-accent px-3 py-1.5 text-sm font-medium text-ivory hover:bg-accent-hover"
               >
                 Registrar pago
               </button>
@@ -295,9 +290,9 @@ export default async function StudentDetailPage({
           </div>
         )}
 
-        <div className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm dark:border-emerald-950 dark:bg-zinc-950">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            <span>⚖️</span> Peso corporal
+        <div className="rounded-card-lg border border-line p-5">
+          <h2 className="flex items-center gap-2 font-heading text-lg font-semibold text-ink">
+            <Scale className="h-5 w-5 text-ink-muted" strokeWidth={1.75} /> Peso corporal
           </h2>
           {sparklinePoints.length >= 2 && (
             <div className="mt-3">
@@ -305,9 +300,9 @@ export default async function StudentDetailPage({
             </div>
           )}
           {bodyMetrics.length === 0 ? (
-            <p className="mt-2 text-sm text-zinc-500">Todavía no hay registros.</p>
+            <p className="mt-2 text-sm text-ink-muted">Todavía no hay registros.</p>
           ) : (
-            <ul className="mt-3 flex flex-col gap-1 text-sm text-zinc-600 dark:text-zinc-300">
+            <ul className="mt-3 flex flex-col gap-1 text-sm text-ink-muted">
               {bodyMetrics.slice(0, 8).map((m) => (
                 <li key={m.id} className="flex justify-between gap-2">
                   <span>{formatDate(m.date)}</span>
@@ -321,49 +316,46 @@ export default async function StudentDetailPage({
           )}
           <form action={boundLogMetric} className="no-print mt-4 flex flex-wrap items-end gap-2">
             <div>
-              <label className="block text-xs text-zinc-500">Peso (kg)</label>
+              <label className="block text-xs text-ink-muted">Peso (kg)</label>
               <input
                 type="number"
                 step="0.1"
                 name="weightKg"
-                className="w-24 rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+                className="w-24 rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
               />
             </div>
             <div className="min-w-[140px] flex-1">
-              <label className="block text-xs text-zinc-500">Notas</label>
+              <label className="block text-xs text-ink-muted">Notas</label>
               <input
                 type="text"
                 name="notes"
-                className="w-full rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+                className="w-full rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
               />
             </div>
             <button
               type="submit"
-              className="rounded-lg bg-emerald-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
+              className="rounded-button bg-accent px-3 py-1.5 text-sm font-medium text-ivory hover:bg-accent-hover"
             >
               Registrar
             </button>
           </form>
         </div>
 
-        <div className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm dark:border-emerald-950 dark:bg-zinc-950">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            <span>📅</span> Entrenamientos recientes
+        <div className="rounded-card-lg border border-line p-5">
+          <h2 className="flex items-center gap-2 font-heading text-lg font-semibold text-ink">
+            <CalendarDays className="h-5 w-5 text-ink-muted" strokeWidth={1.75} /> Entrenamientos recientes
           </h2>
           {workoutLogs.length === 0 ? (
-            <p className="mt-2 text-sm text-zinc-500">Todavía no registró ningún entrenamiento.</p>
+            <p className="mt-2 text-sm text-ink-muted">Todavía no registró ningún entrenamiento.</p>
           ) : (
-            <ul className="mt-3 flex flex-col gap-2 text-sm text-zinc-600 dark:text-zinc-300">
+            <ul className="mt-3 flex flex-col gap-2 text-sm text-ink-muted">
               {workoutLogs.map((log) => (
-                <li
-                  key={log.id}
-                  className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/40"
-                >
-                  <div className="flex justify-between font-medium text-zinc-900 dark:text-zinc-50">
+                <li key={log.id} className="rounded-button border border-line p-3">
+                  <div className="flex justify-between font-medium text-ink">
                     <span>{log.routineDay?.label ?? "Sesión libre"}</span>
                     <span>{formatDate(log.date)}</span>
                   </div>
-                  {log.feeling && <p className="mt-1 text-xs text-zinc-500">Sensación: {log.feeling}</p>}
+                  {log.feeling && <p className="mt-1 text-xs text-ink-muted">Sensación: {log.feeling}</p>}
                 </li>
               ))}
             </ul>

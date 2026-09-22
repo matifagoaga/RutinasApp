@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { getActiveRoutine, getExerciseTemplates, getStudentById } from "@/lib/data";
 import { RoutineEditor } from "@/components/RoutineEditor";
 import { saveRoutineAction } from "./actions";
@@ -42,14 +43,14 @@ export default async function RoutineEditPage({
       <div>
         <Link
           href={`/admin/students/${id}`}
-          className="text-sm text-emerald-700 hover:text-emerald-900 dark:text-emerald-400 dark:hover:text-emerald-300"
+          className="flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink"
         >
-          ← Volver a {student.name}
+          <ArrowLeft className="h-4 w-4" strokeWidth={1.75} /> Volver a {student.name}
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+        <h1 className="mt-2 font-heading text-2xl font-semibold text-ink">
           {activeRoutine ? "Editar rutina" : "Nueva rutina"} de {student.name}
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-ink-muted">
           Al guardar se crea una nueva versión de la rutina y queda como la activa; las anteriores
           quedan en el historial.
         </p>

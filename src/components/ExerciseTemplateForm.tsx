@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Plus } from "lucide-react";
 import { processImageFile } from "@/lib/image";
 import { EXERCISE_CATEGORIES } from "@/lib/exerciseCategories";
 
@@ -64,12 +65,12 @@ export function ExerciseTemplateForm({
           required
           defaultValue={initial.name}
           placeholder="Ejercicio (ej: Sentadilla)"
-          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+          className="w-full rounded-button border border-line px-3 py-2 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
         />
         <select
           name="category"
           defaultValue={initial.category}
-          className="rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+          className="rounded-button border border-line px-3 py-2 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
         >
           <option value="">Sin categoría</option>
           {EXERCISE_CATEGORIES.map((category) => (
@@ -86,21 +87,21 @@ export function ExerciseTemplateForm({
           name="sets"
           defaultValue={initial.sets}
           placeholder="Series"
-          className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+          className="rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
         />
         <input
           type="text"
           name="reps"
           defaultValue={initial.reps}
           placeholder="Reps (ej 8-12)"
-          className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+          className="rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
         />
         <input
           type="text"
           name="weight"
           defaultValue={initial.weight}
           placeholder="Peso sugerido"
-          className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+          className="rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
         />
         <input
           type="number"
@@ -108,7 +109,7 @@ export function ExerciseTemplateForm({
           name="restSeconds"
           defaultValue={initial.restSeconds}
           placeholder="Descanso (seg)"
-          className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+          className="rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
         />
       </div>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -117,14 +118,14 @@ export function ExerciseTemplateForm({
           name="notes"
           defaultValue={initial.notes}
           placeholder="Notas (opcional)"
-          className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+          className="rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
         />
         <input
           type="text"
           name="videoUrl"
           defaultValue={initial.videoUrl}
           placeholder="Link de video (opcional)"
-          className="rounded-lg border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-emerald-950"
+          className="rounded-button border border-line px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
         />
       </div>
 
@@ -135,19 +136,20 @@ export function ExerciseTemplateForm({
             <img
               src={imageData}
               alt=""
-              className="h-14 w-14 rounded-lg border border-zinc-200 object-cover dark:border-zinc-800"
+              className="h-14 w-14 rounded-button border border-line object-cover"
             />
             <button
               type="button"
               onClick={() => setImageData("")}
-              className="text-xs font-medium text-red-600 hover:text-red-700"
+              className="text-xs font-medium text-danger hover:text-danger-hover"
             >
               Quitar foto/GIF
             </button>
           </>
         ) : (
-          <label className="cursor-pointer text-xs font-medium text-emerald-700 hover:text-emerald-900 dark:text-emerald-400">
-            + Foto o GIF del ejercicio
+          <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-hover">
+            <Plus className="h-3.5 w-3.5" strokeWidth={1.75} />
+            Foto o GIF del ejercicio
             <input
               type="file"
               accept="image/*"
@@ -161,12 +163,12 @@ export function ExerciseTemplateForm({
         )}
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       <button
         type="submit"
         disabled={isPending}
-        className="self-start rounded-lg bg-emerald-800 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60"
+        className="self-start rounded-button bg-accent px-4 py-2 text-sm font-medium text-ivory hover:bg-accent-hover disabled:opacity-60"
       >
         {isPending ? "Guardando..." : submitLabel}
       </button>

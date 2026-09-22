@@ -1,4 +1,4 @@
-# RutinasApp
+# Atlas
 
 Herramienta para cargar rutinas de gimnasio a tus alumnos, seguir su progreso
 (peso corporal y entrenamientos completados) y compartírselas online mediante

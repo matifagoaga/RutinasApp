@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { getExerciseTemplateById } from "@/lib/data";
 import { ExerciseTemplateForm } from "@/components/ExerciseTemplateForm";
 import { updateExerciseTemplateAction } from "../actions";
@@ -18,16 +19,16 @@ export default async function EditExerciseTemplatePage({
       <div>
         <Link
           href="/admin/exercises"
-          className="text-sm text-emerald-700 hover:text-emerald-900 dark:text-emerald-400"
+          className="flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink"
         >
-          ← Volver a la biblioteca
+          <ArrowLeft className="h-4 w-4" strokeWidth={1.75} /> Volver a la biblioteca
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+        <h1 className="mt-2 font-heading text-2xl font-semibold text-ink">
           Editar {template.name}
         </h1>
       </div>
 
-      <div className="max-w-lg rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm dark:border-emerald-950 dark:bg-zinc-950">
+      <div className="max-w-lg rounded-card-lg border border-line p-6">
         <ExerciseTemplateForm
           initial={{
             name: template.name,
