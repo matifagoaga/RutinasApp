@@ -6,18 +6,21 @@ import {
   ADMIN_SESSION_COOKIE,
   ADMIN_SESSION_MAX_AGE,
   createSessionToken,
-  isValidPasscode,
+  verifyPassword,
 } from "@/lib/auth";
+import { getTrainerByEmail } from "@/lib/data";
 
 export async function login(formData: FormData) {
-  const passcode = String(formData.get("passcode") ?? "");
+  const email = String(formData.get("email") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
 
-  if (!passcode || !isValidPasscode(passcode)) {
+  const trainer = email ? await getTrainerByEmail(email) : null;
+  if (!trainer || !password || !verifyPassword(password, trainer.passwordHash)) {
     redirect("/admin/login?error=1");
   }
 
   const store = await cookies();
-  store.set(ADMIN_SESSION_COOKIE, createSessionToken(), {
+  store.set(ADMIN_SESSION_COOKIE, createSessionToken(trainer.id), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

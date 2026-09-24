@@ -10,6 +10,22 @@ datasource db {
   provider = "postgresql"
 }
 
+// Un entrenador = un tenant completamente independiente: solo ve sus propios
+// alumnos/equipos/rutinas, sin ningún dato compartido con otros entrenadores.
+// El alta es manual (script), no hay registro público — ver scripts/create-trainer.ts.
+model Trainer {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+
+  students          Student[]
+  teams             Team[]
+  routineTemplates  RoutineTemplate[]
+  exerciseTemplates ExerciseTemplate[]
+}
+
 model Student {
   id            String   @id @default(cuid())
   name          String
@@ -26,6 +42,8 @@ model Student {
   // pero con Testeos en vez de Pagos (eso lo maneja el club).
   teamId        String?
   team          Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  trainerId     String
+  trainer       Trainer  @relation(fields: [trainerId], references: [id], onDelete: Cascade)
 
   routines    Routine[]
   workoutLogs WorkoutLog[]
@@ -34,14 +52,19 @@ model Student {
   testeos     Testeo[]
 
   @@index([teamId])
+  @@index([trainerId])
 }
 
 model Team {
   id        String   @id @default(cuid())
   name      String
   createdAt DateTime @default(now()) @db.Timestamptz(3)
+  trainerId String
+  trainer   Trainer  @relation(fields: [trainerId], references: [id], onDelete: Cascade)
 
   players Student[]
+
+  @@index([trainerId])
 }
 
 // Prueba física libre (nombre + valor a elección del entrenador, ej.
@@ -190,6 +213,10 @@ model ExerciseTemplate {
   videoUrl    String?
   imageData   String?
   createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  trainerId   String
+  trainer     Trainer  @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+
+  @@index([trainerId])
 }
 
 // Rutina completa (días/bloques/ejercicios) reutilizable, sin dueño. El
@@ -201,8 +228,12 @@ model RoutineTemplate {
   id        String   @id @default(cuid())
   title     String
   createdAt DateTime @default(now()) @db.Timestamptz(3)
+  trainerId String
+  trainer   Trainer  @relation(fields: [trainerId], references: [id], onDelete: Cascade)
 
   days RoutineTemplateDay[]
+
+  @@index([trainerId])
 }
 
 model RoutineTemplateDay {

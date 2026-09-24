@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plus, Users } from "lucide-react";
+import { requireTrainerSession } from "@/lib/auth";
 import { getTeams } from "@/lib/data";
 import { createTeamAction } from "./actions";
 
@@ -8,7 +9,8 @@ import { createTeamAction } from "./actions";
 export const dynamic = "force-dynamic";
 
 export default async function TeamsPage() {
-  const teams = await getTeams();
+  const { trainerId } = await requireTrainerSession();
+  const teams = await getTeams(trainerId);
 
   return (
     <div className="flex flex-col gap-8">

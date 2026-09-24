@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CalendarDays, CreditCard, Dumbbell, FlaskConical, Scale } from "lucide-react";
+import { requireTrainerSession } from "@/lib/auth";
 import {
   getActiveRoutine,
   getBodyMetrics,
@@ -40,20 +41,23 @@ export default async function StudentDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const student = await getStudentById(id);
+  const { trainerId } = await requireTrainerSession();
+  const student = await getStudentById(id, trainerId);
   if (!student) notFound();
 
   const isPlayer = student.teamId != null;
 
   const [routine, workoutLogs, bodyMetrics, payments, testeos, testeoNames, teams, baseUrl] =
     await Promise.all([
-      getActiveRoutine(id),
-      getRecentWorkoutLogs(id, 10),
-      getBodyMetrics(id, 30),
-      isPlayer ? Promise.resolve([] as Awaited<ReturnType<typeof getPayments>>) : getPayments(id, 12),
-      isPlayer ? getTesteos(id) : Promise.resolve([] as Awaited<ReturnType<typeof getTesteos>>),
-      isPlayer ? getDistinctTesteoNames() : Promise.resolve([] as string[]),
-      getTeams(),
+      getActiveRoutine(id, trainerId),
+      getRecentWorkoutLogs(id, trainerId, 10),
+      getBodyMetrics(id, trainerId, 30),
+      isPlayer
+        ? Promise.resolve([] as Awaited<ReturnType<typeof getPayments>>)
+        : getPayments(id, trainerId, 12),
+      isPlayer ? getTesteos(id, trainerId) : Promise.resolve([] as Awaited<ReturnType<typeof getTesteos>>),
+      isPlayer ? getDistinctTesteoNames(trainerId) : Promise.resolve([] as string[]),
+      getTeams(trainerId),
       getBaseUrl(),
     ]);
 

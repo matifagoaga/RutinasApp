@@ -1,4 +1,5 @@
 import { LayoutTemplate } from "lucide-react";
+import { requireTrainerSession } from "@/lib/auth";
 import { getRoutineTemplates } from "@/lib/data";
 import { formatDate } from "@/lib/format";
 import { DeleteRoutineTemplateButton } from "@/components/DeleteRoutineTemplateButton";
@@ -9,7 +10,8 @@ import { deleteRoutineTemplateAction } from "./actions";
 export const dynamic = "force-dynamic";
 
 export default async function RoutineTemplatesPage() {
-  const templates = await getRoutineTemplates();
+  const { trainerId } = await requireTrainerSession();
+  const templates = await getRoutineTemplates(trainerId);
 
   return (
     <div className="flex flex-col gap-8">

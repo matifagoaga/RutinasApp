@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BookOpen, Plus } from "lucide-react";
+import { requireTrainerSession } from "@/lib/auth";
 import { getExerciseTemplates } from "@/lib/data";
 import { ExerciseTemplateForm } from "@/components/ExerciseTemplateForm";
 import { DeleteTemplateButton } from "@/components/DeleteTemplateButton";
@@ -10,7 +11,8 @@ import { createExerciseTemplateAction, deleteExerciseTemplateAction } from "./ac
 export const dynamic = "force-dynamic";
 
 export default async function ExerciseLibraryPage() {
-  const templates = await getExerciseTemplates();
+  const { trainerId } = await requireTrainerSession();
+  const templates = await getExerciseTemplates(trainerId);
 
   const groups = new Map<string, typeof templates>();
   for (const template of templates) {

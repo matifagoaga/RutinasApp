@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AlertTriangle, CalendarDays, Plus } from "lucide-react";
+import { requireTrainerSession } from "@/lib/auth";
 import {
   getDashboardStats,
   getRecentActivity,
@@ -13,10 +14,11 @@ import { createStudentAction } from "./students/actions";
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
+  const { trainerId } = await requireTrainerSession();
   const [stats, attention, activity] = await Promise.all([
-    getDashboardStats(),
-    getStudentsNeedingAttention(),
-    getRecentActivity(10),
+    getDashboardStats(trainerId),
+    getStudentsNeedingAttention(trainerId),
+    getRecentActivity(trainerId, 10),
   ]);
 
   return (

@@ -1,33 +1,51 @@
 import { db } from "@/lib/db";
 import { localWeekday, startOfLocalDay } from "@/lib/format";
 
+// ---------- Entrenadores ----------
+
+export function getTrainerByEmail(email: string) {
+  return db.trainer.findUnique({ where: { email: email.trim().toLowerCase() } });
+}
+
 // ---------- Alumnos ----------
 
-export function getStudents() {
-  return db.student.findMany({ where: { teamId: null }, orderBy: { createdAt: "desc" } });
+export function getStudents(trainerId: string) {
+  return db.student.findMany({ where: { teamId: null, trainerId }, orderBy: { createdAt: "desc" } });
 }
 
-export function getStudentById(id: string) {
-  return db.student.findUnique({ where: { id } });
+export function getStudentById(id: string, trainerId: string) {
+  return db.student.findFirst({ where: { id, trainerId } });
 }
 
+// Usado sólo por la página pública /r/[token]: el token es el único límite de
+// autorización acá, a propósito no depende de qué entrenador es el dueño.
 export function getStudentByToken(token: string) {
   return db.student.findUnique({ where: { token } });
 }
 
-export function deleteStudent(id: string) {
-  return db.student.delete({ where: { id } });
+export async function deleteStudent(id: string, trainerId: string) {
+  const { count } = await db.student.deleteMany({ where: { id, trainerId } });
+  if (count === 0) throw new Error("Alumno no encontrado");
 }
 
-export function createStudent(input: {
-  name: string;
-  email?: string | null;
-  phone?: string | null;
-  notes?: string | null;
-  teamId?: string | null;
-}) {
+export async function createStudent(
+  trainerId: string,
+  input: {
+    name: string;
+    email?: string | null;
+    phone?: string | null;
+    notes?: string | null;
+    teamId?: string | null;
+  }
+) {
+  if (input.teamId) {
+    const team = await db.team.findFirst({ where: { id: input.teamId, trainerId } });
+    if (!team) throw new Error("Equipo no encontrado");
+  }
+
   return db.student.create({
     data: {
+      trainerId,
       name: input.name,
       email: input.email || null,
       phone: input.phone || null,
@@ -37,14 +55,20 @@ export function createStudent(input: {
   });
 }
 
-export function setStudentTeam(studentId: string, teamId: string | null) {
-  return db.student.update({ where: { id: studentId }, data: { teamId } });
+export async function setStudentTeam(studentId: string, teamId: string | null, trainerId: string) {
+  if (teamId) {
+    const team = await db.team.findFirst({ where: { id: teamId, trainerId } });
+    if (!team) throw new Error("Equipo no encontrado");
+  }
+  const { count } = await db.student.updateMany({ where: { id: studentId, trainerId }, data: { teamId } });
+  if (count === 0) throw new Error("Alumno no encontrado");
 }
 
 // ---------- Equipos ----------
 
-export function getTeams() {
+export function getTeams(trainerId: string) {
   return db.team.findMany({
+    where: { trainerId },
     orderBy: { name: "asc" },
     include: {
       _count: { select: { players: true } },
@@ -53,27 +77,28 @@ export function getTeams() {
   });
 }
 
-export function getTeamById(id: string) {
-  return db.team.findUnique({ where: { id } });
+export function getTeamById(id: string, trainerId: string) {
+  return db.team.findFirst({ where: { id, trainerId } });
 }
 
-export function getTeamPlayers(teamId: string) {
-  return db.student.findMany({ where: { teamId }, orderBy: { name: "asc" } });
+export function getTeamPlayers(teamId: string, trainerId: string) {
+  return db.student.findMany({ where: { teamId, trainerId }, orderBy: { name: "asc" } });
 }
 
-export function createTeam(name: string) {
-  return db.team.create({ data: { name } });
+export function createTeam(name: string, trainerId: string) {
+  return db.team.create({ data: { name, trainerId } });
 }
 
-export function deleteTeam(id: string) {
-  return db.team.delete({ where: { id } });
+export async function deleteTeam(id: string, trainerId: string) {
+  const { count } = await db.team.deleteMany({ where: { id, trainerId } });
+  if (count === 0) throw new Error("Equipo no encontrado");
 }
 
 // ---------- Testeos ----------
 
-export function getTesteos(studentId: string, limit = 100) {
+export function getTesteos(studentId: string, trainerId: string, limit = 100) {
   return db.testeo.findMany({
-    where: { studentId },
+    where: { studentId, student: { trainerId } },
     // date es la fecha "lógica" (editable); createdAt e id desempatan cuando
     // dos testeos comparten la misma date, para que el orden en el sparkline
     // no dependa del orden no determinístico que devuelve la base.
@@ -84,10 +109,14 @@ export function getTesteos(studentId: string, limit = 100) {
 
 export type TesteoSessionEntryInput = { name: string; value: string };
 
-export function addTesteoSession(
+export async function addTesteoSession(
   studentId: string,
+  trainerId: string,
   input: { date: Date; sessionLabel?: string | null; entries: TesteoSessionEntryInput[] }
 ) {
+  const student = await db.student.findFirst({ where: { id: studentId, trainerId }, select: { id: true } });
+  if (!student) throw new Error("Alumno no encontrado");
+
   return db.testeo.createMany({
     data: input.entries.map((entry) => ({
       studentId,
@@ -99,22 +128,26 @@ export function addTesteoSession(
   });
 }
 
-export function updateTesteo(
+export async function updateTesteo(
   id: string,
+  trainerId: string,
   input: { name: string; value: string; date: Date }
 ) {
-  return db.testeo.update({
-    where: { id },
+  const { count } = await db.testeo.updateMany({
+    where: { id, student: { trainerId } },
     data: { name: input.name, value: input.value, date: input.date },
   });
+  if (count === 0) throw new Error("Testeo no encontrado");
 }
 
-export function deleteTesteo(id: string) {
-  return db.testeo.delete({ where: { id } });
+export async function deleteTesteo(id: string, trainerId: string) {
+  const { count } = await db.testeo.deleteMany({ where: { id, student: { trainerId } } });
+  if (count === 0) throw new Error("Testeo no encontrado");
 }
 
-export async function getDistinctTesteoNames() {
+export async function getDistinctTesteoNames(trainerId: string) {
   const rows = await db.testeo.findMany({
+    where: { student: { trainerId } },
     distinct: ["name"],
     select: { name: true },
     orderBy: { name: "asc" },
@@ -145,7 +178,15 @@ export type RoutineDayInput = {
   blocks: BlockInput[];
 };
 
-export function saveRoutine(studentId: string, title: string, days: RoutineDayInput[]) {
+export async function saveRoutine(
+  studentId: string,
+  trainerId: string,
+  title: string,
+  days: RoutineDayInput[]
+) {
+  const student = await db.student.findFirst({ where: { id: studentId, trainerId }, select: { id: true } });
+  if (!student) throw new Error("Alumno no encontrado");
+
   return db.$transaction(async (tx) => {
     await tx.routine.updateMany({
       where: { studentId, isActive: true },
@@ -198,9 +239,9 @@ export function saveRoutine(studentId: string, title: string, days: RoutineDayIn
   });
 }
 
-export function getActiveRoutine(studentId: string) {
+export function getActiveRoutine(studentId: string, trainerId: string) {
   return db.routine.findFirst({
-    where: { studentId, isActive: true },
+    where: { studentId, isActive: true, student: { trainerId } },
     include: {
       days: {
         orderBy: { order: "asc" },
@@ -215,9 +256,9 @@ export function getActiveRoutine(studentId: string) {
   });
 }
 
-export function getRoutineDayById(routineDayId: string) {
-  return db.routineDay.findUnique({
-    where: { id: routineDayId },
+export function getRoutineDayById(routineDayId: string, trainerId: string) {
+  return db.routineDay.findFirst({
+    where: { id: routineDayId, routine: { student: { trainerId } } },
     include: {
       blocks: {
         orderBy: { order: "asc" },
@@ -227,21 +268,23 @@ export function getRoutineDayById(routineDayId: string) {
   });
 }
 
-export function getRoutineHistory(studentId: string, limit = 10) {
+export function getRoutineHistory(studentId: string, trainerId: string, limit = 10) {
   return db.routine.findMany({
-    where: { studentId },
+    where: { studentId, student: { trainerId } },
     orderBy: { createdAt: "desc" },
     take: limit,
   });
 }
 
 // ---------- Plantillas de rutina ----------
-// Rutinas completas reutilizables (sin alumno dueño). El entrenador las
-// guarda desde el editor de un alumno y las aplica a cualquier otro
-// alumno/jugador; aplicar una copia los datos, no crea ninguna relación.
+// Rutinas completas reutilizables (sin alumno dueño, pero sí con entrenador
+// dueño). El entrenador las guarda desde el editor de un alumno y las aplica
+// a cualquier otro alumno/jugador suyo; aplicar copia los datos, no crea
+// ninguna relación.
 
-export function getRoutineTemplates() {
+export function getRoutineTemplates(trainerId: string) {
   return db.routineTemplate.findMany({
+    where: { trainerId },
     orderBy: { createdAt: "desc" },
     include: {
       days: {
@@ -257,9 +300,10 @@ export function getRoutineTemplates() {
   });
 }
 
-export function createRoutineTemplate(title: string, days: RoutineDayInput[]) {
+export function createRoutineTemplate(trainerId: string, title: string, days: RoutineDayInput[]) {
   return db.routineTemplate.create({
     data: {
+      trainerId,
       title,
       days: {
         create: days.map((day, dayIndex) => ({
@@ -290,8 +334,9 @@ export function createRoutineTemplate(title: string, days: RoutineDayInput[]) {
   });
 }
 
-export function deleteRoutineTemplate(id: string) {
-  return db.routineTemplate.delete({ where: { id } });
+export async function deleteRoutineTemplate(id: string, trainerId: string) {
+  const { count } = await db.routineTemplate.deleteMany({ where: { id, trainerId } });
+  if (count === 0) throw new Error("Plantilla no encontrada");
 }
 
 // ---------- Entrenamientos (progreso) ----------
@@ -303,14 +348,18 @@ export type WorkoutLogEntryInput = {
   weightActual?: string | null;
 };
 
-export function completeWorkout(
+export async function completeWorkout(
   studentId: string,
+  trainerId: string,
   input: {
     routineDayId?: string | null;
     feeling?: string | null;
     entries: WorkoutLogEntryInput[];
   }
 ) {
+  const student = await db.student.findFirst({ where: { id: studentId, trainerId }, select: { id: true } });
+  if (!student) throw new Error("Alumno no encontrado");
+
   return db.workoutLog.create({
     data: {
       studentId,
@@ -322,9 +371,9 @@ export function completeWorkout(
   });
 }
 
-export function getRecentWorkoutLogs(studentId: string, limit = 10) {
+export function getRecentWorkoutLogs(studentId: string, trainerId: string, limit = 10) {
   return db.workoutLog.findMany({
-    where: { studentId },
+    where: { studentId, student: { trainerId } },
     orderBy: { date: "desc" },
     take: limit,
     include: { entries: true, routineDay: true },
@@ -333,10 +382,14 @@ export function getRecentWorkoutLogs(studentId: string, limit = 10) {
 
 // ---------- Peso corporal / progreso físico ----------
 
-export function logBodyMetric(
+export async function logBodyMetric(
   studentId: string,
+  trainerId: string,
   input: { weightKg?: number | null; notes?: string | null }
 ) {
+  const student = await db.student.findFirst({ where: { id: studentId, trainerId }, select: { id: true } });
+  if (!student) throw new Error("Alumno no encontrado");
+
   return db.bodyMetric.create({
     data: {
       studentId,
@@ -346,9 +399,9 @@ export function logBodyMetric(
   });
 }
 
-export function getBodyMetrics(studentId: string, limit = 30) {
+export function getBodyMetrics(studentId: string, trainerId: string, limit = 30) {
   return db.bodyMetric.findMany({
-    where: { studentId },
+    where: { studentId, student: { trainerId } },
     orderBy: { date: "desc" },
     take: limit,
   });
@@ -359,30 +412,31 @@ export function getBodyMetrics(studentId: string, limit = 30) {
 const DAY_MS = 24 * 60 * 60 * 1000;
 const ATTENTION_THRESHOLD_DAYS = 7;
 
-export async function getDashboardStats() {
+export async function getDashboardStats(trainerId: string) {
   const startOfToday = startOfLocalDay(new Date());
   const startOfWeek = new Date(startOfToday.getTime() - localWeekday(startOfToday) * DAY_MS);
 
   const [totalStudents, workoutsToday, workoutsThisWeek] = await Promise.all([
-    db.student.count({ where: { active: true } }),
-    db.workoutLog.count({ where: { date: { gte: startOfToday } } }),
-    db.workoutLog.count({ where: { date: { gte: startOfWeek } } }),
+    db.student.count({ where: { active: true, trainerId } }),
+    db.workoutLog.count({ where: { date: { gte: startOfToday }, student: { trainerId } } }),
+    db.workoutLog.count({ where: { date: { gte: startOfWeek }, student: { trainerId } } }),
   ]);
 
   return { totalStudents, workoutsToday, workoutsThisWeek };
 }
 
-export function getRecentActivity(limit = 10) {
+export function getRecentActivity(trainerId: string, limit = 10) {
   return db.workoutLog.findMany({
+    where: { student: { trainerId } },
     orderBy: { date: "desc" },
     take: limit,
     include: { student: true, routineDay: true },
   });
 }
 
-export async function getStudentsNeedingAttention() {
+export async function getStudentsNeedingAttention(trainerId: string) {
   const students = await db.student.findMany({
-    where: { active: true },
+    where: { active: true, trainerId },
     include: {
       routines: { where: { isActive: true }, take: 1, select: { id: true } },
       workoutLogs: { orderBy: { date: "desc" }, take: 1, select: { date: true } },
@@ -411,31 +465,36 @@ export async function getStudentsNeedingAttention() {
     .filter((student): student is { id: string; name: string; reason: string } => student.reason != null);
 }
 
-export function setStudentAttentionNote(studentId: string, note: string | null) {
-  return db.student.update({
-    where: { id: studentId },
+export async function setStudentAttentionNote(studentId: string, trainerId: string, note: string | null) {
+  const { count } = await db.student.updateMany({
+    where: { id: studentId, trainerId },
     data: { attentionNote: note },
   });
+  if (count === 0) throw new Error("Alumno no encontrado");
 }
 
 // ---------- Pagos ----------
 
-export function getPayments(studentId: string, limit = 12) {
+export function getPayments(studentId: string, trainerId: string, limit = 12) {
   return db.payment.findMany({
-    where: { studentId },
+    where: { studentId, student: { trainerId } },
     orderBy: { paidAt: "desc" },
     take: limit,
   });
 }
 
-export function hasPaidForMonth(studentId: string, month: string) {
-  return db.payment.findFirst({ where: { studentId, month } });
+export function hasPaidForMonth(studentId: string, trainerId: string, month: string) {
+  return db.payment.findFirst({ where: { studentId, month, student: { trainerId } } });
 }
 
-export function registerPayment(
+export async function registerPayment(
   studentId: string,
+  trainerId: string,
   input: { month: string; amount?: number | null; notes?: string | null }
 ) {
+  const student = await db.student.findFirst({ where: { id: studentId, trainerId }, select: { id: true } });
+  if (!student) throw new Error("Alumno no encontrado");
+
   return db.payment.create({
     data: {
       studentId,
@@ -460,17 +519,21 @@ export type ExerciseTemplateInput = {
   imageData?: string | null;
 };
 
-export function getExerciseTemplates() {
-  return db.exerciseTemplate.findMany({ orderBy: [{ category: "asc" }, { name: "asc" }] });
+export function getExerciseTemplates(trainerId: string) {
+  return db.exerciseTemplate.findMany({
+    where: { trainerId },
+    orderBy: [{ category: "asc" }, { name: "asc" }],
+  });
 }
 
-export function getExerciseTemplateById(id: string) {
-  return db.exerciseTemplate.findUnique({ where: { id } });
+export function getExerciseTemplateById(id: string, trainerId: string) {
+  return db.exerciseTemplate.findFirst({ where: { id, trainerId } });
 }
 
-export function createExerciseTemplate(input: ExerciseTemplateInput) {
+export function createExerciseTemplate(trainerId: string, input: ExerciseTemplateInput) {
   return db.exerciseTemplate.create({
     data: {
+      trainerId,
       name: input.name,
       category: input.category || null,
       sets: input.sets,
@@ -484,9 +547,9 @@ export function createExerciseTemplate(input: ExerciseTemplateInput) {
   });
 }
 
-export function updateExerciseTemplate(id: string, input: ExerciseTemplateInput) {
-  return db.exerciseTemplate.update({
-    where: { id },
+export async function updateExerciseTemplate(id: string, trainerId: string, input: ExerciseTemplateInput) {
+  const { count } = await db.exerciseTemplate.updateMany({
+    where: { id, trainerId },
     data: {
       name: input.name,
       category: input.category || null,
@@ -499,8 +562,10 @@ export function updateExerciseTemplate(id: string, input: ExerciseTemplateInput)
       imageData: input.imageData || null,
     },
   });
+  if (count === 0) throw new Error("Ejercicio no encontrado");
 }
 
-export function deleteExerciseTemplate(id: string) {
-  return db.exerciseTemplate.delete({ where: { id } });
+export async function deleteExerciseTemplate(id: string, trainerId: string) {
+  const { count } = await db.exerciseTemplate.deleteMany({ where: { id, trainerId } });
+  if (count === 0) throw new Error("Ejercicio no encontrado");
 }

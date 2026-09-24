@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Plus } from "lucide-react";
+import { requireTrainerSession } from "@/lib/auth";
 import { getTeamById, getTeamPlayers } from "@/lib/data";
 import { DeleteTeamButton } from "@/components/DeleteTeamButton";
 import { createPlayerAction, deleteTeamAction } from "../actions";
@@ -22,10 +23,11 @@ export default async function TeamDetailPage({
   params: Promise<{ teamId: string }>;
 }) {
   const { teamId } = await params;
-  const team = await getTeamById(teamId);
+  const { trainerId } = await requireTrainerSession();
+  const team = await getTeamById(teamId, trainerId);
   if (!team) notFound();
 
-  const players = await getTeamPlayers(teamId);
+  const players = await getTeamPlayers(teamId, trainerId);
   const boundCreatePlayer = createPlayerAction.bind(null, teamId);
   const boundDeleteTeam = deleteTeamAction.bind(null, teamId);
 

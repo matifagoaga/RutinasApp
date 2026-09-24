@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { requireTrainerSession } from "@/lib/auth";
 import { getExerciseTemplateById } from "@/lib/data";
 import { ExerciseTemplateForm } from "@/components/ExerciseTemplateForm";
 import { updateExerciseTemplateAction } from "../actions";
@@ -11,7 +12,8 @@ export default async function EditExerciseTemplatePage({
   params: Promise<{ templateId: string }>;
 }) {
   const { templateId } = await params;
-  const template = await getExerciseTemplateById(templateId);
+  const { trainerId } = await requireTrainerSession();
+  const template = await getExerciseTemplateById(templateId, trainerId);
   if (!template) notFound();
 
   return (

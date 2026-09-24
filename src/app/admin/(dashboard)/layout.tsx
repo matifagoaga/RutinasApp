@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { LogOut, BookOpen, LayoutTemplate } from "lucide-react";
+import { requireTrainerSessionOrRedirect } from "@/lib/auth";
 import { getStudents, getTeams } from "@/lib/data";
 import { StudentSidebar } from "@/components/StudentSidebar";
 import { AtlasLogo } from "@/components/AtlasLogo";
 import { logout } from "../login/actions";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [students, teams] = await Promise.all([getStudents(), getTeams()]);
+  const { trainerId } = await requireTrainerSessionOrRedirect();
+  const [students, teams] = await Promise.all([getStudents(trainerId), getTeams(trainerId)]);
 
   return (
     <div className="min-h-screen bg-ivory text-ink">

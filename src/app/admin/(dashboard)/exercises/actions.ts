@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireAdminSession } from "@/lib/auth";
+import { requireTrainerSession } from "@/lib/auth";
 import {
   createExerciseTemplate,
   deleteExerciseTemplate,
@@ -39,20 +39,20 @@ function parseTemplateInput(formData: FormData): ExerciseTemplateInput {
 }
 
 export async function createExerciseTemplateAction(formData: FormData) {
-  await requireAdminSession();
-  await createExerciseTemplate(parseTemplateInput(formData));
+  const { trainerId } = await requireTrainerSession();
+  await createExerciseTemplate(trainerId, parseTemplateInput(formData));
   revalidatePath("/admin/exercises");
 }
 
 export async function updateExerciseTemplateAction(templateId: string, formData: FormData) {
-  await requireAdminSession();
-  await updateExerciseTemplate(templateId, parseTemplateInput(formData));
+  const { trainerId } = await requireTrainerSession();
+  await updateExerciseTemplate(templateId, trainerId, parseTemplateInput(formData));
   revalidatePath("/admin/exercises");
   redirect("/admin/exercises");
 }
 
 export async function deleteExerciseTemplateAction(templateId: string) {
-  await requireAdminSession();
-  await deleteExerciseTemplate(templateId);
+  const { trainerId } = await requireTrainerSession();
+  await deleteExerciseTemplate(templateId, trainerId);
   revalidatePath("/admin/exercises");
 }

@@ -14,14 +14,22 @@ export default async function LoginPage({
         <AtlasLogo className="h-8 w-8 text-ink" />
         <h1 className="mt-4 font-heading text-xl font-bold text-ink">Atlas</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          Ingresá tu contraseña de entrenador para continuar.
+          Ingresá con tu cuenta de entrenador para continuar.
         </p>
 
         <form action={login} className="mt-6 flex flex-col gap-4">
           <input
-            type="password"
-            name="passcode"
+            type="email"
+            name="email"
             autoFocus
+            required
+            placeholder="Email"
+            aria-label="Email"
+            className="w-full rounded-button border border-line bg-ivory px-3 py-2 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
+          />
+          <input
+            type="password"
+            name="password"
             required
             placeholder="Contraseña"
             aria-label="Contraseña"
@@ -29,7 +37,7 @@ export default async function LoginPage({
           />
           {error && (
             <p role="alert" className="text-sm text-danger">
-              Contraseña incorrecta. Probá de nuevo.
+              Email o contraseña incorrectos. Probá de nuevo.
             </p>
           )}
           <button

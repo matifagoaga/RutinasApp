@@ -5,8 +5,8 @@ import { completeWorkout, getRoutineDayById, getStudentByToken, logBodyMetric } 
 
 async function requireActiveStudentByToken(token: string) {
   const student = await getStudentByToken(token);
-  if (!student || !student.active) throw new Error("No autorizado");
-  return student;
+  if (!student || !student.active || !student.trainerId) throw new Error("No autorizado");
+  return { ...student, trainerId: student.trainerId };
 }
 
 export async function completeWorkoutAction(token: string, formData: FormData) {
@@ -23,7 +23,7 @@ export async function completeWorkoutAction(token: string, formData: FormData) {
   }[] = [];
 
   if (routineDayId) {
-    const day = await getRoutineDayById(routineDayId);
+    const day = await getRoutineDayById(routineDayId, student.trainerId);
     if (day) {
       entries = day.blocks.flatMap((block) =>
         block.exercises.map((exercise) => ({
@@ -36,7 +36,7 @@ export async function completeWorkoutAction(token: string, formData: FormData) {
     }
   }
 
-  await completeWorkout(student.id, { routineDayId, feeling, entries });
+  await completeWorkout(student.id, student.trainerId, { routineDayId, feeling, entries });
   revalidatePath(`/r/${token}`);
 }
 
@@ -51,6 +51,6 @@ export async function logBodyMetricPublicAction(token: string, formData: FormDat
     throw new Error("Peso inválido");
   }
 
-  await logBodyMetric(student.id, { weightKg, notes: notes || null });
+  await logBodyMetric(student.id, student.trainerId, { weightKg, notes: notes || null });
   revalidatePath(`/r/${token}`);
 }

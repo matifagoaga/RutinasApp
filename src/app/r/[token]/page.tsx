@@ -15,12 +15,13 @@ export default async function PublicRoutinePage({
 }) {
   const { token } = await params;
   const student = await getStudentByToken(token);
-  if (!student || !student.active) notFound();
+  if (!student || !student.active || !student.trainerId) notFound();
+  const trainerId = student.trainerId;
 
   const [routine, workoutLogs, bodyMetrics] = await Promise.all([
-    getActiveRoutine(student.id),
-    getRecentWorkoutLogs(student.id, 10),
-    getBodyMetrics(student.id, 30),
+    getActiveRoutine(student.id, trainerId),
+    getRecentWorkoutLogs(student.id, trainerId, 10),
+    getBodyMetrics(student.id, trainerId, 30),
   ]);
 
   const sparklinePoints = [...bodyMetrics]

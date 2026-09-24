@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { requireTrainerSession } from "@/lib/auth";
 import { getActiveRoutine, getExerciseTemplates, getRoutineTemplates, getStudentById } from "@/lib/data";
 import { RoutineEditor } from "@/components/RoutineEditor";
 import { saveRoutineAction } from "./actions";
@@ -12,13 +13,14 @@ export default async function RoutineEditPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const student = await getStudentById(id);
+  const { trainerId } = await requireTrainerSession();
+  const student = await getStudentById(id, trainerId);
   if (!student) notFound();
 
   const [activeRoutine, libraryExercises, routineTemplates] = await Promise.all([
-    getActiveRoutine(id),
-    getExerciseTemplates(),
-    getRoutineTemplates(),
+    getActiveRoutine(id, trainerId),
+    getExerciseTemplates(trainerId),
+    getRoutineTemplates(trainerId),
   ]);
 
   const initialDays = (activeRoutine?.days ?? []).map((day) => ({

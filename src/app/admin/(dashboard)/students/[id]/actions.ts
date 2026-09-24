@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireAdminSession } from "@/lib/auth";
+import { requireTrainerSession } from "@/lib/auth";
 import { parseLocalDateInput } from "@/lib/format";
 import {
   addTesteoSession,
@@ -17,7 +17,7 @@ import {
 } from "@/lib/data";
 
 export async function logBodyMetricAction(studentId: string, formData: FormData) {
-  await requireAdminSession();
+  const { trainerId } = await requireTrainerSession();
 
   const weightRaw = String(formData.get("weightKg") ?? "").trim();
   const notes = String(formData.get("notes") ?? "").trim();
@@ -27,12 +27,12 @@ export async function logBodyMetricAction(studentId: string, formData: FormData)
     throw new Error("Peso inválido");
   }
 
-  await logBodyMetric(studentId, { weightKg, notes: notes || null });
+  await logBodyMetric(studentId, trainerId, { weightKg, notes: notes || null });
   revalidatePath(`/admin/students/${studentId}`);
 }
 
 export async function registerPaymentAction(studentId: string, formData: FormData) {
-  await requireAdminSession();
+  const { trainerId } = await requireTrainerSession();
 
   const month = String(formData.get("month") ?? "").trim();
   if (!/^\d{4}-\d{2}$/.test(month)) {
@@ -47,28 +47,28 @@ export async function registerPaymentAction(studentId: string, formData: FormDat
     throw new Error("Monto inválido");
   }
 
-  await registerPayment(studentId, { month, amount, notes: notes || null });
+  await registerPayment(studentId, trainerId, { month, amount, notes: notes || null });
   revalidatePath(`/admin/students/${studentId}`);
 }
 
 export async function setAttentionNoteAction(studentId: string, formData: FormData) {
-  await requireAdminSession();
+  const { trainerId } = await requireTrainerSession();
   const note = String(formData.get("note") ?? "").trim();
-  await setStudentAttentionNote(studentId, note || null);
+  await setStudentAttentionNote(studentId, trainerId, note || null);
   revalidatePath(`/admin/students/${studentId}`);
   revalidatePath("/admin");
 }
 
 export async function clearAttentionNoteAction(studentId: string) {
-  await requireAdminSession();
-  await setStudentAttentionNote(studentId, null);
+  const { trainerId } = await requireTrainerSession();
+  await setStudentAttentionNote(studentId, trainerId, null);
   revalidatePath(`/admin/students/${studentId}`);
   revalidatePath("/admin");
 }
 
 export async function setStudentTeamAction(studentId: string, teamId: string) {
-  await requireAdminSession();
-  await setStudentTeam(studentId, teamId || null);
+  const { trainerId } = await requireTrainerSession();
+  await setStudentTeam(studentId, teamId || null, trainerId);
   revalidatePath(`/admin/students/${studentId}`);
 }
 
@@ -78,14 +78,14 @@ export async function addTesteoSessionAction(
   sessionLabel: string,
   entries: TesteoSessionEntryInput[]
 ) {
-  await requireAdminSession();
+  const { trainerId } = await requireTrainerSession();
 
   const cleanEntries = entries
     .map((e) => ({ name: e.name.trim(), value: e.value.trim() }))
     .filter((e) => e.name && e.value);
   if (cleanEntries.length === 0) throw new Error("Agregá al menos un test con nombre y valor");
 
-  await addTesteoSession(studentId, {
+  await addTesteoSession(studentId, trainerId, {
     date: parseLocalDateInput(date),
     sessionLabel: sessionLabel.trim() || null,
     entries: cleanEntries,
@@ -98,26 +98,26 @@ export async function updateTesteoAction(
   testeoId: string,
   input: { name: string; value: string; date: string }
 ) {
-  await requireAdminSession();
+  const { trainerId } = await requireTrainerSession();
 
   const name = input.name.trim();
   const value = input.value.trim();
   if (!name) throw new Error("El nombre del testeo es obligatorio");
   if (!value) throw new Error("El valor es obligatorio");
 
-  await updateTesteo(testeoId, { name, value, date: parseLocalDateInput(input.date) });
+  await updateTesteo(testeoId, trainerId, { name, value, date: parseLocalDateInput(input.date) });
   revalidatePath(`/admin/students/${studentId}`);
 }
 
 export async function deleteTesteoAction(studentId: string, testeoId: string) {
-  await requireAdminSession();
-  await deleteTesteo(testeoId);
+  const { trainerId } = await requireTrainerSession();
+  await deleteTesteo(testeoId, trainerId);
   revalidatePath(`/admin/students/${studentId}`);
 }
 
 export async function deleteStudentAction(studentId: string) {
-  await requireAdminSession();
-  await deleteStudent(studentId);
+  const { trainerId } = await requireTrainerSession();
+  await deleteStudent(studentId, trainerId);
   revalidatePath("/admin");
   redirect("/admin");
 }
