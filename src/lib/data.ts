@@ -187,56 +187,70 @@ export async function saveRoutine(
   const student = await db.student.findFirst({ where: { id: studentId, trainerId }, select: { id: true } });
   if (!student) throw new Error("Alumno no encontrado");
 
-  return db.$transaction(async (tx) => {
-    await tx.routine.updateMany({
-      where: { studentId, isActive: true },
-      data: { isActive: false },
-    });
+  return db.$transaction(
+    async (tx) => {
+      await tx.routine.updateMany({
+        where: { studentId, isActive: true },
+        data: { isActive: false },
+      });
 
-    return tx.routine.create({
-      data: {
-        studentId,
-        title,
-        isActive: true,
-        days: {
-          create: days.map((day, dayIndex) => ({
-            label: day.label,
-            order: dayIndex,
-            blocks: {
-              create: day.blocks.map((block, blockIndex) => ({
-                label: block.label,
-                order: blockIndex,
-                exercises: {
-                  create: block.exercises.map((exercise, exerciseIndex) => ({
-                    name: exercise.name,
-                    sets: exercise.sets,
-                    reps: exercise.reps,
-                    weight: exercise.weight || null,
-                    restSeconds: exercise.restSeconds ?? null,
-                    notes: exercise.notes || null,
-                    videoUrl: exercise.videoUrl || null,
-                    imageData: exercise.imageData || null,
-                    order: exerciseIndex,
-                  })),
-                },
-              })),
-            },
-          })),
-        },
-      },
-      include: {
-        days: {
-          orderBy: { order: "asc" },
-          include: {
-            blocks: {
-              orderBy: { order: "asc" },
-              include: { exercises: { orderBy: { order: "asc" } } },
+      const routine = await tx.routine.create({ data: { studentId, title, isActive: true } });
+
+      // Se crea nivel por nivel (no con `create` anidado de un solo saque) porque
+      // el motor de Prisma 7 + adapter pierde referencias de blockId cuando hay
+      // varios días/bloques con arrays paralelos en una sola escritura anidada
+      // profunda, y termina violando el FK Exercise_blockId_fkey.
+      for (let dayIndex = 0; dayIndex < days.length; dayIndex++) {
+        const day = days[dayIndex];
+        const createdDay = await tx.routineDay.create({
+          data: { routineId: routine.id, label: day.label, order: dayIndex },
+        });
+
+        for (let blockIndex = 0; blockIndex < day.blocks.length; blockIndex++) {
+          const block = day.blocks[blockIndex];
+          const createdBlock = await tx.exerciseBlock.create({
+            data: { dayId: createdDay.id, label: block.label, order: blockIndex },
+          });
+
+          for (let exerciseIndex = 0; exerciseIndex < block.exercises.length; exerciseIndex++) {
+            const exercise = block.exercises[exerciseIndex];
+            await tx.exercise.create({
+              data: {
+                blockId: createdBlock.id,
+                order: exerciseIndex,
+                name: exercise.name,
+                sets: exercise.sets,
+                reps: exercise.reps,
+                weight: exercise.weight || null,
+                restSeconds: exercise.restSeconds ?? null,
+                notes: exercise.notes || null,
+                videoUrl: exercise.videoUrl || null,
+                imageData: exercise.imageData || null,
+              },
+            });
+          }
+        }
+      }
+
+      return tx.routine.findUniqueOrThrow({
+        where: { id: routine.id },
+        include: {
+          days: {
+            orderBy: { order: "asc" },
+            include: {
+              blocks: {
+                orderBy: { order: "asc" },
+                include: { exercises: { orderBy: { order: "asc" } } },
+              },
             },
           },
         },
-      },
-    });
-  });
+      });
+    },
+    // Muchas escrituras secuenciales contra Neon (una por fila, no en lote)
+    // pueden pasar el timeout default de 5s en rutinas grandes de varios días.
+    { timeout: 20000 }
+  );
 }
 
 export function getActiveRoutine(studentId: string, trainerId: string) {
@@ -300,38 +314,50 @@ export function getRoutineTemplates(trainerId: string) {
   });
 }
 
-export function createRoutineTemplate(trainerId: string, title: string, days: RoutineDayInput[]) {
-  return db.routineTemplate.create({
-    data: {
-      trainerId,
-      title,
-      days: {
-        create: days.map((day, dayIndex) => ({
-          label: day.label,
-          order: dayIndex,
-          blocks: {
-            create: day.blocks.map((block, blockIndex) => ({
-              label: block.label,
-              order: blockIndex,
-              exercises: {
-                create: block.exercises.map((exercise, exerciseIndex) => ({
-                  name: exercise.name,
-                  sets: exercise.sets,
-                  reps: exercise.reps,
-                  weight: exercise.weight || null,
-                  restSeconds: exercise.restSeconds ?? null,
-                  notes: exercise.notes || null,
-                  videoUrl: exercise.videoUrl || null,
-                  imageData: exercise.imageData || null,
-                  order: exerciseIndex,
-                })),
+export async function createRoutineTemplate(trainerId: string, title: string, days: RoutineDayInput[]) {
+  return db.$transaction(
+    async (tx) => {
+      const template = await tx.routineTemplate.create({ data: { trainerId, title } });
+
+      // Mismo motivo que en saveRoutine: crear nivel por nivel en vez de un
+      // `create` anidado de una vez evita que Prisma pierda el blockId con
+      // varios días/bloques en paralelo.
+      for (let dayIndex = 0; dayIndex < days.length; dayIndex++) {
+        const day = days[dayIndex];
+        const createdDay = await tx.routineTemplateDay.create({
+          data: { routineTemplateId: template.id, label: day.label, order: dayIndex },
+        });
+
+        for (let blockIndex = 0; blockIndex < day.blocks.length; blockIndex++) {
+          const block = day.blocks[blockIndex];
+          const createdBlock = await tx.routineTemplateBlock.create({
+            data: { dayId: createdDay.id, label: block.label, order: blockIndex },
+          });
+
+          for (let exerciseIndex = 0; exerciseIndex < block.exercises.length; exerciseIndex++) {
+            const exercise = block.exercises[exerciseIndex];
+            await tx.routineTemplateExercise.create({
+              data: {
+                blockId: createdBlock.id,
+                order: exerciseIndex,
+                name: exercise.name,
+                sets: exercise.sets,
+                reps: exercise.reps,
+                weight: exercise.weight || null,
+                restSeconds: exercise.restSeconds ?? null,
+                notes: exercise.notes || null,
+                videoUrl: exercise.videoUrl || null,
+                imageData: exercise.imageData || null,
               },
-            })),
-          },
-        })),
-      },
+            });
+          }
+        }
+      }
+
+      return template;
     },
-  });
+    { timeout: 20000 }
+  );
 }
 
 export async function deleteRoutineTemplate(id: string, trainerId: string) {
