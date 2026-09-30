@@ -10,11 +10,13 @@ async function requireActiveStudentByToken(token: string) {
   return { ...student, trainerId: student.trainerId };
 }
 
-export async function completeWorkoutAction(token: string, formData: FormData) {
+export async function completeWorkoutAction(
+  token: string,
+  dayId: string,
+  feeling: string,
+  weights: { exerciseId: string; weightActual: string }[]
+) {
   const student = await requireActiveStudentByToken(token);
-
-  const routineDayId = String(formData.get("routineDayId") ?? "") || null;
-  const feeling = String(formData.get("feeling") ?? "").trim() || null;
 
   let entries: {
     exerciseName: string;
@@ -24,22 +26,27 @@ export async function completeWorkoutAction(token: string, formData: FormData) {
   }[] = [];
   let dayLabel: string | null = null;
 
-  if (routineDayId) {
-    const day = await getRoutineDayById(routineDayId, student.trainerId);
-    if (day) {
-      dayLabel = day.label;
-      entries = day.blocks.flatMap((block) =>
-        block.exercises.map((exercise) => ({
+  const day = await getRoutineDayById(dayId, student.trainerId);
+  if (day) {
+    dayLabel = day.label;
+    entries = day.blocks.flatMap((block) =>
+      block.exercises.map((exercise) => {
+        const typed = weights.find((w) => w.exerciseId === exercise.id)?.weightActual.trim();
+        return {
           exerciseName: exercise.name,
           setsCompleted: exercise.sets,
           repsActual: exercise.reps,
-          weightActual: exercise.weight,
-        }))
-      );
-    }
+          weightActual: typed || exercise.weight,
+        };
+      })
+    );
   }
 
-  await completeWorkout(student.id, student.trainerId, { routineDayId, feeling, entries });
+  await completeWorkout(student.id, student.trainerId, {
+    routineDayId: dayId,
+    feeling: feeling.trim() || null,
+    entries,
+  });
   revalidatePath(`/r/${token}`);
 
   // El email es un extra: si Resend falla, no debe romper el flujo de

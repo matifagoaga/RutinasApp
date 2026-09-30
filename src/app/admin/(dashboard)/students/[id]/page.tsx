@@ -295,6 +295,16 @@ export default async function StudentDetailPage({
                     <span>{formatDate(log.date)}</span>
                   </div>
                   {log.feeling && <p className="mt-1 text-xs text-ink-muted">Sensación: {log.feeling}</p>}
+                  {log.entries.length > 0 && (
+                    <ul className="mt-1 flex flex-col gap-0.5 text-xs text-ink-muted">
+                      {log.entries.map((entry) => (
+                        <li key={entry.id} className="flex justify-between gap-2">
+                          <span>{entry.exerciseName}</span>
+                          <span>{entry.weightActual || "—"}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
               ))}
             </ul>

@@ -12,7 +12,15 @@ export type ExerciseRow = {
   imageData?: string | null;
 };
 
-export function ExerciseTable({ exercises }: { exercises: ExerciseRow[] }) {
+export function ExerciseTable({
+  exercises,
+  weightInputs,
+  onWeightChange,
+}: {
+  exercises: ExerciseRow[];
+  weightInputs?: Record<string, string>;
+  onWeightChange?: (exerciseId: string, value: string) => void;
+}) {
   return (
     <div className="overflow-x-auto rounded-card border border-line">
       <table className="w-full min-w-[560px] text-sm">
@@ -62,7 +70,20 @@ export function ExerciseTable({ exercises }: { exercises: ExerciseRow[] }) {
               </td>
               <td className="px-4 py-3 text-center text-ink">{exercise.sets}</td>
               <td className="px-4 py-3 text-center text-ink">{exercise.reps}</td>
-              <td className="px-4 py-3 text-center text-ink">{exercise.weight || "—"}</td>
+              <td className="px-4 py-3 text-center text-ink">
+                {onWeightChange ? (
+                  <input
+                    type="text"
+                    value={weightInputs?.[exercise.id] ?? ""}
+                    onChange={(e) => onWeightChange(exercise.id, e.target.value)}
+                    placeholder={exercise.weight || "Peso"}
+                    aria-label={`Peso usado en ${exercise.name}`}
+                    className="w-20 rounded-button border border-line px-2 py-1 text-center text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
+                  />
+                ) : (
+                  exercise.weight || "—"
+                )}
+              </td>
               <td className="px-4 py-3 text-center text-ink">
                 {exercise.restSeconds != null ? `${exercise.restSeconds}s` : "—"}
               </td>

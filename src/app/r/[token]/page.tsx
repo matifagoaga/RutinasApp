@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
-import { CalendarDays, CheckCircle2, Scale } from "lucide-react";
+import { CalendarDays, Scale } from "lucide-react";
 import { getActiveRoutine, getBodyMetrics, getRecentWorkoutLogs, getStudentByToken } from "@/lib/data";
 import { formatDate, isSameDay } from "@/lib/format";
 import { PrintButton } from "@/components/PrintButton";
 import { Sparkline } from "@/components/Sparkline";
-import { ExerciseTable } from "@/components/ExerciseTable";
 import { AtlasLogo } from "@/components/AtlasLogo";
+import { WorkoutCompletionForm } from "@/components/WorkoutCompletionForm";
 import { completeWorkoutAction, logBodyMetricPublicAction } from "./actions";
 
 export default async function PublicRoutinePage({
@@ -68,38 +68,12 @@ export default async function PublicRoutinePage({
                   <h2 className="font-heading font-semibold">{day.label}</h2>
                 </div>
                 <div className="flex flex-col gap-4 p-4">
-                  {day.blocks.map((block) => (
-                    <div key={block.id}>
-                      {showBlockLabel && (
-                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                          {block.label}
-                        </p>
-                      )}
-                      <ExerciseTable exercises={block.exercises} />
-                    </div>
-                  ))}
-                  <form action={boundComplete} className="no-print flex flex-col gap-2">
-                    <input type="hidden" name="routineDayId" value={day.id} />
-                    {!done && (
-                      <textarea
-                        name="feeling"
-                        rows={2}
-                        placeholder="¿Cómo te sentiste? (opcional)"
-                        className="w-full rounded-button border border-line px-3 py-2 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-tint"
-                      />
-                    )}
-                    <button
-                      type="submit"
-                      className={`flex w-full items-center justify-center gap-2 rounded-button px-3 py-2.5 text-sm font-semibold transition ${
-                        done
-                          ? "border border-line bg-ink/[0.04] text-ink-muted"
-                          : "bg-accent text-ivory hover:bg-accent-hover"
-                      }`}
-                    >
-                      {done && <CheckCircle2 className="h-4 w-4" strokeWidth={1.75} />}
-                      {done ? "Marcado como completado hoy" : "Marcar como completado hoy"}
-                    </button>
-                  </form>
+                  <WorkoutCompletionForm
+                    day={day}
+                    done={done}
+                    showBlockLabel={showBlockLabel}
+                    onComplete={boundComplete}
+                  />
                 </div>
               </div>
             );
@@ -162,6 +136,16 @@ export default async function PublicRoutinePage({
                   <span>{formatDate(log.date)}</span>
                 </div>
                 {log.feeling && <p className="mt-1 text-xs text-ink-muted">{log.feeling}</p>}
+                {log.entries.length > 0 && (
+                  <ul className="mt-1 flex flex-col gap-0.5 text-xs text-ink-muted">
+                    {log.entries.map((entry) => (
+                      <li key={entry.id} className="flex justify-between gap-2">
+                        <span>{entry.exerciseName}</span>
+                        <span>{entry.weightActual || "—"}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </li>
             ))}
           </ul>
