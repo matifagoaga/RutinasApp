@@ -7,6 +7,10 @@ export function getTrainerByEmail(email: string) {
   return db.trainer.findUnique({ where: { email: email.trim().toLowerCase() } });
 }
 
+export function getTrainerById(id: string) {
+  return db.trainer.findUnique({ where: { id } });
+}
+
 // ---------- Alumnos ----------
 
 export function getStudents(trainerId: string) {
