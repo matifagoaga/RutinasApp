@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Sora, Work_Sans } from "next/font/google";
 import "./globals.css";
 
@@ -17,6 +17,15 @@ const workSans = Work_Sans({
 export const metadata: Metadata = {
   title: "Atlas",
   description: "Rutinas de entrenamiento y seguimiento de alumnos",
+  appleWebApp: {
+    capable: true,
+    title: "Atlas",
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#f7f6f2",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
